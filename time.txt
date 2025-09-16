@@ -1,1 +1,5 @@
-9:15a - 11:45a
+took notes and familiarized with GUFI queries
+
+
+Began structure for tree generation class
+
