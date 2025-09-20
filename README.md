@@ -27,17 +27,26 @@ clean.py removes any dirs to streamline work
 
 
 # Gather metrics on the file trees
-treeMetrics.py takes in the two starting directories for your trees and gathers metrics which it then uses to compare the two trees.
-Metrics gathered: tree edit distance, change in tree height, number of leaf nodes (nodes with no children)  (replace root and root2 with the names of the starting directories for tree one and two, or the path to tree one and two):
+compare_trees.py takes in the two starting directories for your trees and gathers metrics which it then uses to compare the two trees.
+Metrics gathered: tree edit distance, change in tree height, number of leaf nodes (nodes with no children)
 
-`python3 ./TreeMetrics.py <directory1> <directory2>`
+To compare file system trees:
 
+`python3 compare_trees.py <directory1> <directory2>`
 
+To compare GUFI indexes:
 
-If you would like to display the file system trees as well for a visual overview, simply enter:
+`python3 compare_trees.py <GUFI_index1> <GUFI_index2> --gufi`
 
-`python3 ./TreeMetrics.py <directory1> <directory2> tree`
+print_tree.py will display one or two trees for debugging purposes.
 
+For file system trees:
+
+`python3 print_tree.py <root> [root2]`
+
+For GUFI index trees:
+
+`python3 print_tree.py <GUFI_index> [GUFI_index2] --gufi`
 
 If you need to install the zss library to run treeMetrics.py:
 
