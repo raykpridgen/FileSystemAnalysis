@@ -7,6 +7,7 @@ if len(sys.argv) == 2:
 
 elif len(sys.argv) == 3 and sys.argv[2] == "-gufi":
     root = tm.GUFI_to_zssNodes(sys.argv[1])
+    root = root.children[0]
     tm.printNodeTree(root)
 
 elif len(sys.argv) == 3:
@@ -18,6 +19,8 @@ elif len(sys.argv) == 3:
 elif len(sys.argv) == 4 and sys.argv[3] == "--gufi":
     root = tm.GUFI_to_zssNodes(sys.argv[1])
     root2 = tm.GUFI_to_zssNodes(sys.argv[2])
+    root = root.children[0]
+    root2 = root2.children[0]
     tm.printNodeTree(root)
     print("===============================================================")
     tm.printNodeTree(root2)

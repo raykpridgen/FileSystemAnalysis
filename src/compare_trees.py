@@ -6,6 +6,9 @@ if len(sys.argv) == 4 and sys.argv[3] == "--gufi":
     try:
         root = tm.GUFI_to_zssNodes(sys.argv[1])
         root2 = tm.GUFI_to_zssNodes(sys.argv[2])
+
+        root = root.children[0]
+        root2 = root2.children[0]
         
         print(f"Tree before changes: {root.label} | Tree after changes: {root2.label}")
         print(f"Tree Edit Distance: {tm.zss.simple_distance(root, root2)}")

@@ -38,9 +38,34 @@ def fileSystem_to_zssNodes(path):
 
     #Creating the root node
     rootNode = FS_Node(os.path.basename(path))
+    
+    #Fetching all subdirectories/files and sorting them for tree consistency
+    currChildren = [] #List that will hold all the children of the current directory
+    currFiles = [] #List that will hold all files temporarily for alphabetical sorting
+
+    #Fetching all subdirectories, sorting them. and adding them to the list for all children
+    for name in os.listdir(path):
+        if name == ".DS_Store":
+            continue
+        if os.path.isdir(f"{path}/{name}"):
+            currChildren.append(name)
+    currChildren.sort()
+
+    #Fetching all files and sorting them
+    for name in os.listdir(path):
+        if name == ".DS_Store":
+            continue
+        if os.path.isfile(f"{path}/{name}"):
+            currFiles.append(name)
+    currFiles.sort()
+
+    #Adding all files to the list of all children
+    for file in currFiles:
+        currChildren.append(file)
+
 
     #Parsing through the names of the dir/files in the passed in directory
-    for name in os.listdir(path):
+    for name in currChildren:
         #Ignoring macOS specific metadata files
         if name == ".DS_Store":
             continue
@@ -77,8 +102,27 @@ def GUFI_to_zssNodes(GUFI_Path):
     #Creating the root node
     rootNode = FS_Node(os.path.basename(GUFI_Path))
 
-    #Parsing through the names of the dir/files in the passed in directory
+    #Fetching all subdirectories/files and sorting them for tree consistency
+    currChildren = [] #List that will hold all the children of the current directory
+
+    #Fetching all subdirectories, sorting them. and adding them to the list for all children
     for name in os.listdir(GUFI_Path):
+        if name == ".DS_Store":
+            continue
+        if os.path.isdir(f"{GUFI_Path}/{name}"):
+            currChildren.append(name)
+    currChildren.sort()
+
+    #Fetching the database file
+    for name in os.listdir(GUFI_Path):
+        if name == ".DS_Store":
+            continue
+        if os.path.isfile(f"{GUFI_Path}/{name}"):
+            currChildren.append(name)
+
+
+    #Parsing through the names of the dir/files in the passed in directory
+    for name in currChildren:
         #Ignoring macOS specific metadata files
         if name == ".DS_Store":
             continue
@@ -99,7 +143,7 @@ def GUFI_to_zssNodes(GUFI_Path):
                 conn = sqlite3.connect(f"{GUFI_Path}/{name}")
                 cur = conn.cursor()
                 #To fetch all data, SELECT * from entries
-                cur.execute("SELECT name FROM entries")
+                cur.execute("SELECT name FROM entries ORDER BY name ASC")
                 entries = cur.fetchall()
                 #print(row)
                 for file in entries:
