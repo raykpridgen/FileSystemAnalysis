@@ -93,10 +93,33 @@ sqlite3 ./index/db.db ".schema entries"
 ## Pass SQL to gufi_query
 
 ### All files bigger than 1MB
-gufi_query -E "SELECT name, size FROM entries WHERE size > 1048576;" ./myindex
+gufi_query -d $'\t' -E "SELECT name, size FROM entries WHERE size > 1048576;" ./myindex
 
 ### Files modified in the last day
 gufi_query -E "SELECT name, mtime FROM entries WHERE mtime > strftime('%s','now','-1 day');" ./myindex
 
 ### All symlinks + targets
 gufi_query -E "SELECT name, linkname FROM entries WHERE type = 'l';" ./myindex
+
+
+## Gufi paste to edit before cmd line
+
+### Get total size from files in the index
+gufi_query \
+-I "CREATE TABLE intermediate(size INT64);" \
+-E "INSERT INTO intermediate SELECT name, size FROM entries WHERE type = 'f';" \
+-K "CREATE TABLE aggregate(total INT64);" \
+-J "INSERT INTO aggregate SELECT SUM(size) FROM intermediate;" \
+-G "SELECT SUM(total) FROM aggregate;" \
+-d '|' -n 32 <index>
+
+### Get folders size from index
+gufi_query \
+-I "CREATE TABLE intermediate(size INT64);" \
+-E "INSERT INTO intermediate SELECT size FROM entries WHERE type = 'd';" \
+-K "CREATE TABLE aggregate(total INT64);" \
+-J "INSERT INTO aggregate SELECT SUM(size) FROM intermediate;" \
+-G "SELECT SUM(total) FROM aggregate;" \
+-d '|' -n 32 <index>
+
+- type can be f = files, d = dirs, l = link

@@ -59,12 +59,12 @@ status change time
 """
 
 degreeDistr = {
-    0 : 0.10,
+    0 : 0.15,
     1 : 0.17, 
     2 : 0.13, 
-    3 : 0.11, 
-    4 : 0.10,
-    5 : 0.11, 
+    3 : 0.14, 
+    4 : 0.05,
+    5 : 0.08, 
     6 : 0.09,
     7 : 0.06,
     8 : 0.05,
@@ -84,12 +84,37 @@ filesDistr = {
     "symlink" : 0.02,
 }
 
-class ArtificalTree:
-    def __init__(self, rootName, maxDepth, degreeDist, sizeDist, timeRange, fileDist, filetypes, modeDist, users=1, groups=1):
+fileExtensions = [".txt", ".csv", ".json", ".log", ".md", ".xml"]
+permDist = {
+    0o666 : 0.55,
+    0o644 : 0.25,
+    0o444 : 0.15,
+    0o744 : 0.05,
+}
+permissions = [0o444, 0o644, 0o666, 0o744]
+
+
+    
+# Clean up previous run with same name
+def clean_tree(rootName):
+        # If root name already exists
+        if os.path.exists(rootName):
+            
+            # If it is a file, remove
+            if os.path.isfile(rootName):
+                os.remove(rootName)
+            
+            # If name is a dir
+            elif os.path.isdir(rootName):
+                shutil.rmtree(rootName)
+
+class ArtificialTree:
+    def __init__(self, rootName, depthRange, degreeDist, sizeDist, timeRange, fileDist, filetypes, modeDist, users=1, groups=1):
         # String, name of root
         self.rootName = rootName
-        # Fixed int, depth
-        self.maxDepth = maxDepth
+        # Fixed int pair, depth
+        self.depthRange = depthRange
+        self.currentMaxDepth = 0
         # Array / Dict of distribution values to make random nodes in each folder
         self.degreeDist = degreeDist
         # Array / Dict of distribution values to determine size of files made
@@ -107,6 +132,8 @@ class ArtificalTree:
         self.users = users
         # Number of groups users inhabit
         self.groups = groups
+        # Created file locations
+        self.filesCreated = []
 
     # Generate a random degree of a node from the dist
     def sample_degree(self):
@@ -128,11 +155,9 @@ class ArtificalTree:
         probs = [self.sizeDist[c]["prob"] for c in sizeTypes]
 
         selection = random.choices(sizeTypes, weights=probs, k=1)[0]
-        print(f"Picked: {selection}")
 
         low, high = self.sizeDist[selection]["range"]
         size = random.randint(low, high)
-        print(f"Size: {size}")
         return size
 
     # Generate random times for file within bounds
@@ -153,7 +178,7 @@ class ArtificalTree:
         cumulativeProb = 0
         # Dict looks like type : prob
         # Move through each prob
-        for type, typeProb in self.degreeDist.items():
+        for type, typeProb in self.fileDist.items():
             # Sum probs for each child added
             cumulativeProb += typeProb
             # If prob surpasses distribution value for a child #, return as num of children
@@ -161,33 +186,36 @@ class ArtificalTree:
                 return type
         return 0
     
-    # Clean up previous run with same name
-    def clean_tree(self):
-        # If root name already exists
-        if os.path.exists(self.rootName):
-            
-            # If it is a file, remove
-            if os.path.isfile(self.rootName):
-                os.remove(self.rootName)
-            
-            # If name is a dir
-            elif os.path.isdir(self.rootName):
-                shutil.rmtree(self.rootName)
+    def sample_Extensions(self):
+        return random.choice(self.filetypes)
 
+    def sample_permissions(self):
+        randomProb = random.random()
+        cumProb = 0
+        for perm, permProb in self.modeDist.items():
+            cumProb += permProb
+            if randomProb <= cumProb:
+                return perm
+        return 0o644
+    
     # Generate random file extension
     # Generate tree from params
     def generate_tree(self):
         # Create root dir
         root = Path(self.rootName)
+        clean_tree(root)
         root.mkdir(parents=True, exist_ok=True)
+        os.chmod(root, 0o755)
+        self.gen_tree_atlevel(0, root)
+
 
     # Generate at a level, utilize recursion
-    def gen_tree_atlevel(self, depth):
+    def gen_tree_atlevel(self, depth, root):
         
         # Return if the depth is too far
-        if (depth >= self.maxDepth):
+        if (depth >= self.depthRange[1]):
             return
-        
+
         # Determine number of children
         degree = self.sample_degree()
 
@@ -206,8 +234,79 @@ class ArtificalTree:
             elif (childType == "symlink"):
                 symlinkNum += 1
 
+        if depth < self.depthRange[0] and folderNum == 0:
+            folderNum = 1
+            if fileNum > 0:
+                fileNum -= 1
+
+        # Folders
+        for i in range(0, folderNum):
+            # Attach root/node_depth_num
+            sub = root / f"folder{depth}_{i}"
+            sub.mkdir(parents=True, exist_ok=True)
+            self.filesCreated.append(sub)
+            self.currentMaxDepth += 1
+            # RECURSION HERE
+            # Recurse if min is not met, or if it has on a prob
+            if depth < self.depthRange[0]:
+                self.gen_tree_atlevel(depth+1, sub)
+            elif random.random() < 0.4:
+                self.gen_tree_atlevel(depth+1, sub)
+
+        # Files
+        for i in range(0, fileNum):
+            # Make file
+            filePath = root / f"file_{depth}_{i}{self.sample_Extensions()}"
+            filePath.touch()
+            self.filesCreated.append(filePath)
+            # File size
+            dataSize = self.sample_size()
+            with open(filePath, 'wb') as f:
+                f.write(os.urandom(dataSize))
+            
+            # File permissions
+            os.chmod(filePath, self.sample_permissions())
+
+            # Times - currently mutable access time and mod time
+            atime, mtime, ctime, crtime = self.sample_time()
+            os.utime(filePath, (atime, mtime))
+        
+
+        # Symlinks
+        for i in range(symlinkNum):
+            if self.filesCreated:
+                target = random.choice(self.filesCreated)
+                linkPath = root / f"symlink_{depth}_{i}_{random.randint(0, 9999)}"
+                try:
+                    os.symlink(target, linkPath)
+                except FileExistsError:
+                    pass
         
 
 
+# Args: root name, degree min and max
+if len(sys.argv) < 2:
+    print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
+    print("Usage: python3 treeGen.py clean <rootName> --> to clean")
+    sys.exit(1)
 
+# Handle clean case
+if sys.argv[1] == "clean":
+    if len(sys.argv) < 3:
+        print("Usage: python3 treeGen.py clean <rootName>")
+        sys.exit(1)
+    clean_tree(sys.argv[2])
+    print("Removed tree.")
+    sys.exit(0)
 
+# Otherwise, generate a new tree
+if len(sys.argv) < 4:
+    print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
+    sys.exit(1)
+
+rootName = sys.argv[1]
+depthRange = [int(sys.argv[2]), int(sys.argv[3])]
+timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
+
+newTree = ArtificialTree(rootName, depthRange, degreeDistr, sizeDistr, timeRange, filesDistr, fileExtensions, permDist)
+newTree.generate_tree()
