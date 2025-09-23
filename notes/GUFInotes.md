@@ -124,3 +124,4 @@ gufi_query \
 
 - type can be f = files, d = dirs, l = link
 ### PROBLEM FINDING FOLDERS
+- summary / treesummary table
