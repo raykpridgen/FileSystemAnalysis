@@ -123,3 +123,4 @@ gufi_query \
 -d '|' -n 32 <index>
 
 - type can be f = files, d = dirs, l = link
+### PROBLEM FINDING FOLDERS

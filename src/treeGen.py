@@ -3,10 +3,10 @@ import os
 import shutil
 from pathlib import Path
 import random as ran
-import string
 import sys
 import random
 import time
+import json
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
@@ -84,16 +84,17 @@ filesDistr = {
     "symlink" : 0.02,
 }
 
-fileExtensions = [".txt", ".csv", ".json", ".log", ".md", ".xml"]
 permDist = {
     0o666 : 0.55,
     0o644 : 0.25,
     0o444 : 0.15,
     0o744 : 0.05,
 }
-permissions = [0o444, 0o644, 0o666, 0o744]
 
-
+# Import distribution parameters for use
+def load_json_params(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
     
 # Clean up previous run with same name
 def clean_tree(rootName):
@@ -109,7 +110,7 @@ def clean_tree(rootName):
                 shutil.rmtree(rootName)
 
 class ArtificialTree:
-    def __init__(self, rootName, depthRange, degreeDist, sizeDist, timeRange, fileDist, filetypes, modeDist, users=1, groups=1):
+    def __init__(self, rootName, depthRange, degreeDist, sizeDist, timeRange, fileDist, fileExtensions, modeDist, users=1, groups=1):
         # String, name of root
         self.rootName = rootName
         # Fixed int pair, depth
@@ -125,7 +126,7 @@ class ArtificialTree:
         # Distribution of regular files, folders, symlinks
         self.fileDist = fileDist
         # File types to use
-        self.filetypes = filetypes
+        self.fileExtensions = fileExtensions
         # Distribution of file permissions
         self.modeDist = modeDist
         # Number of users to own files
@@ -137,7 +138,7 @@ class ArtificialTree:
 
     # Generate a random degree of a node from the dist
     def sample_degree(self):
-        randomProb = random.random()
+        randomProb = ran.random()
         cumulativeProb = 0
         # Dict looks like numChild : prob
         # Move through each prob
@@ -154,10 +155,10 @@ class ArtificialTree:
         sizeTypes = list(self.sizeDist.keys())
         probs = [self.sizeDist[c]["prob"] for c in sizeTypes]
 
-        selection = random.choices(sizeTypes, weights=probs, k=1)[0]
+        selection = ran.choices(sizeTypes, weights=probs, k=1)[0]
 
         low, high = self.sizeDist[selection]["range"]
-        size = random.randint(low, high)
+        size = ran.randint(low, high)
         return size
 
     # Generate random times for file within bounds
@@ -165,16 +166,16 @@ class ArtificialTree:
         # Get range
         start, end = self.timeRange
         # Pick random time within range for create
-        crtime = random.randint(start, end)
+        crtime = ran.randint(start, end)
         # Follow scheme for each succeeding time
-        ctime = crtime + random.randint(0, 1000)
-        mtime = ctime + random.randint(0, 1000)
-        atime = mtime + random.randint(0, 1000)
+        ctime = crtime + ran.randint(0, 1000)
+        mtime = ctime + ran.randint(0, 1000)
+        atime = mtime + ran.randint(0, 1000)
         return atime, mtime, ctime, crtime
 
     # Generate a file type to create
     def sample_fileType(self):
-        randomProb = random.random()
+        randomProb = ran.random()
         cumulativeProb = 0
         # Dict looks like type : prob
         # Move through each prob
@@ -187,10 +188,20 @@ class ArtificialTree:
         return 0
     
     def sample_Extensions(self):
-        return random.choice(self.filetypes)
+        randomProb = ran.random()
+        cumulativeProb = 0
+        # Dict looks like ext : prob
+        # Move through each prob
+        for ext, extProb in self.fileExtensions.items():
+            # Sum probs for each child added
+            cumulativeProb += extProb
+            # If prob surpasses distribution value for a child #, return as num of children
+            if randomProb <= cumulativeProb:
+                return ext
+        return 0
 
     def sample_permissions(self):
-        randomProb = random.random()
+        randomProb = ran.random()
         cumProb = 0
         for perm, permProb in self.modeDist.items():
             cumProb += permProb
@@ -250,7 +261,7 @@ class ArtificialTree:
             # Recurse if min is not met, or if it has on a prob
             if depth < self.depthRange[0]:
                 self.gen_tree_atlevel(depth+1, sub)
-            elif random.random() < 0.4:
+            elif ran.random() < 0.4:
                 self.gen_tree_atlevel(depth+1, sub)
 
         # Files
@@ -275,14 +286,23 @@ class ArtificialTree:
         # Symlinks
         for i in range(symlinkNum):
             if self.filesCreated:
-                target = random.choice(self.filesCreated)
-                linkPath = root / f"symlink_{depth}_{i}_{random.randint(0, 9999)}"
+                target = ran.choice(self.filesCreated)
+                linkPath = root / f"symlink_{depth}_{i}_{ran.randint(0, 9999)}"
                 try:
                     os.symlink(target, linkPath)
                 except FileExistsError:
                     pass
         
+"""
+Future usages
 
+python3 treeGen.py create <root_name> <min_depth> <max_depth>
+    types of json args?
+python3 treeGen.py clean <root_name>
+python3 treeGen.py modify <root_Name> <iterations>
+    types of modifications -- json?
+
+"""
 
 # Args: root name, degree min and max
 if len(sys.argv) < 2:
@@ -308,5 +328,12 @@ rootName = sys.argv[1]
 depthRange = [int(sys.argv[2]), int(sys.argv[3])]
 timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
 
-newTree = ArtificialTree(rootName, depthRange, degreeDistr, sizeDistr, timeRange, filesDistr, fileExtensions, permDist)
+degree_distr = {int(k): v for k, v in load_json_params("dists/degree.json").items()}
+fileType_distr = load_json_params("dists/typeDist.json")
+fileExt_distr = load_json_params("dists/filetypes.json")
+permissions_distr = {int(k, 8): v for k, v in load_json_params("dists/permissions.json").items()}
+size_distr = load_json_params("dists/size.json")
+
+
+newTree = ArtificialTree(rootName, depthRange, degree_distr, size_distr, timeRange, fileType_distr, fileExt_distr, permissions_distr)
 newTree.generate_tree()
