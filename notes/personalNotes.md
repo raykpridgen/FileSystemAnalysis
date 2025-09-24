@@ -55,3 +55,6 @@
 ### Thresholds
 - Flag folders deeper than N
 - Flag folders bigger than M MB
+
+
+gufi_query edit before paste
