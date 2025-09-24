@@ -27,3 +27,9 @@
 - Plot metrics over multiple iterations (TED, etc)
 - Add time metrics for every program / script
 - Block times based on which code is running (I/O, GUFI, computation)
+
+notes
+src
+test
+data
+_gufi
