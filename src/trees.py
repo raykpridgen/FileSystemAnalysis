@@ -4,45 +4,16 @@ from pathlib import Path
 import random as ran
 import string
 import sys
+import random
+import time
 
-
-# CREATION TIME IMMUTABLE ON LINUX
-# pywin32 TO MODIFY CREATION ON WINDOWS
 
 """
-Permissions scheme
-Owner | Group | Others
-r w x   r w x   r w x
-
-r = 4
-w = 2 
-x = 1
-
-Sum bits for each category
+OLD Code
 
 """
 filetypes = [".txt", ".csv", ".json", ".log", ".md", ".xml"]
 permissions = ["0o444", "0o644", "0o666", "0o744"]
-
-
-
-def basicTree(depth, size, degree, filetypes, permissions):
-    root = "root"
-    
-    if depth == 0:
-        return
-    
-    # If name exists
-    if os.path.exists(root):
-        # If name is a file
-        if os.path.isfile(root):
-            os.remove(root)
-        # If name is a dir
-        elif os.path.isdir(root):
-            shutil.rmtree(root)
-    
-    # Make tree
-    os.makedirs(root)
 
 # Top function, handle existence and call recursion
 def make_tree(root, depth, degree, files):
@@ -89,7 +60,6 @@ def make_recurse(root, depth, degree, files):
                         f.write(fileText)
             # Run again with new, decreased depth
             make_recurse(sub, depth-1, degree, files)
-
 
 # Args: root name, depth, degree
 if (len(sys.argv)) < 3:
