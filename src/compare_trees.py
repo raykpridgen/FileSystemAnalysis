@@ -2,7 +2,35 @@ import tree_metrics as tm
 import sys
 
 
-if len(sys.argv) == 4 and sys.argv[3] == "--gufi":
+
+if len(sys.argv) == 5 and sys.argv[4] == "-r" and sys.argv[3] == "--gufi":
+    try:
+        root = tm.GUFI_to_zssNodes(sys.argv[1])
+        root2 = tm.GUFI_to_zssNodes(sys.argv[2])
+
+        root = root.children[0]
+        root2 = root2.children[0]
+        
+        print(f"{tm.zss.simple_distance(root, root2)}")
+        print(f"{(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
+        print(f"{(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+    except Exception as e:
+        print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
+
+
+elif len(sys.argv) == 4 and sys.argv[3] == "-r":
+    try:
+        root = tm.fileSystem_to_zssNodes(sys.argv[1])
+        root2 = tm.fileSystem_to_zssNodes(sys.argv[2])
+        
+        print(f"{tm.zss.simple_distance(root, root2)}")
+        print(f"{(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
+        print(f"{(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+    except Exception as e:
+        print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
+
+
+elif len(sys.argv) == 4 and sys.argv[3] == "--gufi":
     try:
         root = tm.GUFI_to_zssNodes(sys.argv[1])
         root2 = tm.GUFI_to_zssNodes(sys.argv[2])
