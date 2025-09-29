@@ -19,3 +19,17 @@
 ## Marcos
 - Metrics that measure trees
 - Metrics that measure difference of two trees
+
+## Meeting Three - 9/23/2025
+- Powerpoint of workflow and changes
+- establish routine workflow with shell and scripts
+- Visualize trees with image, compare multiple
+- Plot metrics over multiple iterations (TED, etc)
+- Add time metrics for every program / script
+- Block times based on which code is running (I/O, GUFI, computation)
+
+notes
+src
+test
+data
+_gufi

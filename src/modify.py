@@ -50,6 +50,10 @@ def modify_recurse(root, files, max_new=2, delete_prob=0.2, edit_prob=0.3, creat
                     fileText = "".join(ran.choices(string.ascii_letters + string.digits, k=size))
                     f.write(fileText)
 
+        # Create folders
+        if ran.random() < create_prob * 0.5:
+            make_recurse(root, max_new-2, max_new-2, files)
+
 def make_recurse(root, depth, degree, files):
     if depth == 0:
         return
