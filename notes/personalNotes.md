@@ -58,3 +58,53 @@
 
 
 gufi_query edit before paste
+
+
+
+# Permissions scheme
+"""
+Owner | Group | Others
+r w x   r w x   r w x
+
+r = 4
+w = 2 
+x = 1
+
+Sum bits for each category
+
+"""
+
+# Basic params / structure for generation
+"""
+Attrs to model for GUFI
+
+name
+- vary name length?
+
+type
+- Regular files, dirs, symlinks, sockets/pipes
+- extentions tied to size expectations
+
+uid
+- Pick from a pool of users, assign distributions to each user
+gid
+- set random groups?
+
+size
+- distribution param (many small + few big, etc)
+
+access time
+mod time
+creation time
+status change time
+- FOR TIMES: crtime <= ctime <= mtime <= atime
+- allow random but do not deviate from scheme, for logical creation
+"""
+
+# Use cases from GUFI
+"""
+- entry queries: find recently accessed files
+- dir summaries: size, count, etc
+- tree-summary: Full tree rollup
+
+"""

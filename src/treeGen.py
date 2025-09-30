@@ -10,87 +10,7 @@ import json
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
-# Permissions scheme
-"""
-Owner | Group | Others
-r w x   r w x   r w x
-
-r = 4
-w = 2 
-x = 1
-
-Sum bits for each category
-
-"""
-
-# Basic params / structure for generation
-"""
-Attrs to model for GUFI
-
-name
-- vary name length?
-
-type
-- Regular files, dirs, symlinks, sockets/pipes
-- extentions tied to size expectations
-
-uid
-- Pick from a pool of users, assign distributions to each user
-gid
-- set random groups?
-
-size
-- distribution param (many small + few big, etc)
-
-access time
-mod time
-creation time
-status change time
-- FOR TIMES: crtime <= ctime <= mtime <= atime
-- allow random but do not deviate from scheme, for logical creation
-"""
-
-# Use cases from GUFI
-"""
-- entry queries: find recently accessed files
-- dir summaries: size, count, etc
-- tree-summary: Full tree rollup
-
-"""
-
-degreeDistr = {
-    0 : 0.15,
-    1 : 0.17, 
-    2 : 0.13, 
-    3 : 0.14, 
-    4 : 0.05,
-    5 : 0.08, 
-    6 : 0.09,
-    7 : 0.06,
-    8 : 0.05,
-    9 : 0.05,
-    10: 0.03,
-               }
-
-sizeDistr = {
-    "small" : {"range": (0, 1_000), "prob": 0.55},
-    "medium" : {"range": (1_000, 1_000_000), "prob": 0.40},
-    "large" : {"range": (1_000_000, 500_000_000), "prob": 0.05},
-}
-
-filesDistr = {
-    "file" : 0.62,
-    "folder" : 0.36,
-    "symlink" : 0.02,
-}
-
-permDist = {
-    0o666 : 0.55,
-    0o644 : 0.25,
-    0o444 : 0.15,
-    0o744 : 0.05,
-}
-
+SAVE_TO_DIR = "../data/"
 # Import distribution parameters for use
 def load_json_params(file_path):
     with open(file_path, 'r') as f:
@@ -303,37 +223,41 @@ python3 treeGen.py modify <root_Name> <iterations>
     types of modifications -- json?
 
 """
-
-# Args: root name, degree min and max
-if len(sys.argv) < 2:
-    print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
-    print("Usage: python3 treeGen.py clean <rootName> --> to clean")
-    sys.exit(1)
-
-# Handle clean case
-if sys.argv[1] == "clean":
-    if len(sys.argv) < 3:
-        print("Usage: python3 treeGen.py clean <rootName>")
+if __name__ == "__main__":
+    # Args: root name, degree min and max
+    if len(sys.argv) < 2:
+        print("\n\nThis program generates a mock file tree, with psuedorandom files, subdirectories, and symlinks.")
+        print(" -- Each file type is ordered by an iteration of depth and degree within its directory.")
+        print("\nTo generate a new tree:")
+        print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
+        print("\nTo remove a tree:")
+        print("Usage: python3 treeGen.py clean <rootName>\n\n")
         sys.exit(1)
-    clean_tree(sys.argv[2])
-    print("Removed tree.")
-    sys.exit(0)
 
-# Otherwise, generate a new tree
-if len(sys.argv) < 4:
-    print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
-    sys.exit(1)
+    # Handle clean case
+    if sys.argv[1] == "clean":
+        if len(sys.argv) < 3:
+            print("Usage: python3 treeGen.py clean <rootName>")
+            sys.exit(1)
+        clean_tree(f"{SAVE_TO_DIR}{sys.argv[2]}")
+        print(f"Removed tree at {SAVE_TO_DIR}{sys.argv[2]}")
+        sys.exit(0)
 
-rootName = sys.argv[1]
-depthRange = [int(sys.argv[2]), int(sys.argv[3])]
-timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
+    # Otherwise, generate a new tree
+    if len(sys.argv) < 4:
+        print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
+        sys.exit(1)
 
-degree_distr = {int(k): v for k, v in load_json_params("dists/degree.json").items()}
-fileType_distr = load_json_params("dists/typeDist.json")
-fileExt_distr = load_json_params("dists/filetypes.json")
-permissions_distr = {int(k, 8): v for k, v in load_json_params("dists/permissions.json").items()}
-size_distr = load_json_params("dists/size.json")
+    rootName = f"{SAVE_TO_DIR}{sys.argv[1]}"
+    depthRange = [int(sys.argv[2]), int(sys.argv[3])]
+    timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
+
+    degree_distr = {int(k): v for k, v in load_json_params("dists/degree.json").items()}
+    fileType_distr = load_json_params("dists/typeDist.json")
+    fileExt_distr = load_json_params("dists/filetypes.json")
+    permissions_distr = {int(k, 8): v for k, v in load_json_params("dists/permissions.json").items()}
+    size_distr = load_json_params("dists/size.json")
 
 
-newTree = ArtificialTree(rootName, depthRange, degree_distr, size_distr, timeRange, fileType_distr, fileExt_distr, permissions_distr)
-newTree.generate_tree()
+    newTree = ArtificialTree(rootName, depthRange, degree_distr, size_distr, timeRange, fileType_distr, fileExt_distr, permissions_distr)
+    newTree.generate_tree()
