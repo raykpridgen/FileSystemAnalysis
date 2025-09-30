@@ -1,5 +1,0 @@
-took notes and familiarized with GUFI queries
-
-
-Began structure for tree generation class
-
