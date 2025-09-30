@@ -139,13 +139,12 @@ class ArtificialTree:
         os.chmod(root, 0o755)
         self.gen_tree_atlevel(0, root)
 
-
     # Generate at a level, utilize recursion
-    def gen_tree_atlevel(self, depth, root):
-        
+    def gen_tree_atlevel(self, depth, root, max_files=-1):
+        files_made = 0
         # Return if the depth is too far
         if (depth >= self.depthRange[1]):
-            return
+            return 0
 
         # Determine number of children
         degree = self.sample_degree()
@@ -159,16 +158,28 @@ class ArtificialTree:
         for i in range(0, degree):
             childType = self.sample_fileType()
             if (childType == "file"):
-                fileNum += 1
+                # Check to not exceed max files
+                if max_files != -1 and files_made >= max_files:
+                    pass
+                else:
+                    fileNum += 1
+                    files_made += 1
             elif (childType == "folder"):
                 folderNum += 1
             elif (childType == "symlink"):
-                symlinkNum += 1
-
+                # Check to not exceed max files
+                if max_files != -1 and files_made >= max_files:
+                    pass
+                else:
+                    symlinkNum += 1
+                    files_made += 1
+        
+        # Increase number of folders to expand depth if below minimum 
         if depth < self.depthRange[0] and folderNum == 0:
             folderNum = 1
             if fileNum > 0:
                 fileNum -= 1
+                files_made -= 1
 
         # Folders
         for i in range(0, folderNum):
@@ -179,16 +190,26 @@ class ArtificialTree:
             self.currentMaxDepth += 1
             # RECURSION HERE
             # Recurse if min is not met, or if it has on a prob
-            if depth < self.depthRange[0]:
-                self.gen_tree_atlevel(depth+1, sub)
-            elif ran.random() < 0.4:
-                self.gen_tree_atlevel(depth+1, sub)
+            if max_files == -1:
+                if depth < self.depthRange[0]:
+                    files_made += self.gen_tree_atlevel(depth+1, sub)
+                elif ran.random() < 0.4:
+                    files_made += self.gen_tree_atlevel(depth+1, sub)
+            else:
+                remaining = max(0, max_files - files_made)
+                if remaining == 0:
+                    return 0
+                if depth < self.depthRange[0]:
+                    files_made += self.gen_tree_atlevel(depth+1, sub, max_files=remaining)
+                elif ran.random() < 0.4:
+                    files_made += self.gen_tree_atlevel(depth+1, sub, max_files=remaining)
 
         # Files
         for i in range(0, fileNum):
             # Make file
             filePath = root / f"file_{depth}_{i}{self.sample_Extensions()}"
             filePath.touch()
+            files_made += 1
             self.filesCreated.append(filePath)
             # File size
             dataSize = self.sample_size()
@@ -202,7 +223,6 @@ class ArtificialTree:
             atime, mtime, ctime, crtime = self.sample_time()
             os.utime(filePath, (atime, mtime))
         
-
         # Symlinks
         for i in range(symlinkNum):
             if self.filesCreated:
@@ -212,7 +232,8 @@ class ArtificialTree:
                     os.symlink(target, linkPath)
                 except FileExistsError:
                     pass
-        
+        return files_made
+      
 """
 Future usages
 
@@ -224,27 +245,46 @@ python3 treeGen.py modify <root_Name> <iterations>
 
 """
 if __name__ == "__main__":
-    # Args: root name, degree min and max
-    if len(sys.argv) < 2:
-        print("\n\nThis program generates a mock file tree, with psuedorandom files, subdirectories, and symlinks.")
-        print(" -- Each file type is ordered by an iteration of depth and degree within its directory.")
-        print("\nTo generate a new tree:")
-        print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
-        print("\nTo remove a tree:")
-        print("Usage: python3 treeGen.py clean <rootName>\n\n")
-        sys.exit(1)
+    args = sys.argv[1:]
 
-    # Handle clean case
-    if sys.argv[1] == "clean":
-        if len(sys.argv) < 3:
-            print("Usage: python3 treeGen.py clean <rootName>")
-            sys.exit(1)
-        clean_tree(f"{SAVE_TO_DIR}{sys.argv[2]}")
-        print(f"Removed tree at {SAVE_TO_DIR}{sys.argv[2]}")
+    # Show help if no args or user explicitly asks
+    if not args or args[0] in ("-h", "--help"):
+        print("""
+This program generates a mock file tree with pseudorandom files, subdirectories, and symlinks.
+
+USAGE:
+
+Generate new tree:
+    python3 treeGen.py <root_name> <minDepth> <maxDepth>
+
+Remove tree(s):
+    python3 treeGen.py clean <root_name> <num_remove>
+
+        <num_remove> = 0   → remove just <root_name>
+          greater than 0   → remove <root_name>0, <root_name>1, ... up to <num_remove - 1>
+            """)
         sys.exit(0)
 
-    # Otherwise, generate a new tree
-    if len(sys.argv) < 4:
+    # Handle CLEAN operation
+    if args[0] == "clean":
+        if len(args) < 3:
+            print("Usage: python3 treeGen.py clean <root_name> <num_remove>")
+            sys.exit(1)
+
+        root, num = args[1], int(args[2])
+
+        if num == 0:
+            clean_tree(f"{SAVE_TO_DIR}{root}")
+            print(f"Removed tree at {SAVE_TO_DIR}{root}")
+        else:
+            for i in range(num):
+                clean_tree(f"{SAVE_TO_DIR}{root}{i}")
+                print(f"Removed tree at {SAVE_TO_DIR}{root}{i}")
+
+        sys.exit(0)
+
+    # Handle GENERATION
+    if len(args) < 3:
         print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
         sys.exit(1)
 
