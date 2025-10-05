@@ -68,6 +68,7 @@ class ModifyTree:
     # Recursively edit a tree
     def modify_recurse(self, root, files_made):
         localDepthAndFiles = max(1, int(math.log(max(2, self.maxNew))))
+        treeCreateDepth = self.editProbs["createDepth"]
         # Iterate through direct children at this levels
         for entry in root.iterdir():
             if files_made < self.maxNew:
@@ -102,7 +103,7 @@ class ModifyTree:
         if files_made < self.maxNew: 
             # Creation of files and folders
             # Use an ArtificialTree object to leverage functionality
-            tempTree = self.makeTempTree(root, localDepthAndFiles)
+            tempTree = self.makeTempTree(root, treeCreateDepth)
             
             # Create files - Max at a level is log of max new
             for _ in range(ran.randint(0, localDepthAndFiles)):
@@ -122,7 +123,7 @@ class ModifyTree:
         if files_made < self.maxNew:
             # Create folders
             if ran.random() < self.editProbs["createFolder"]:
-                files_made += tempTree.gen_tree_atlevel(localDepthAndFiles, root, max_files=max(0, self.maxNew - files_made))
+                files_made += tempTree.gen_tree_atlevel(treeCreateDepth, root, max_files=max(0, self.maxNew - files_made))
         
         return files_made
 

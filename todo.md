@@ -41,3 +41,9 @@ GUFI:
 - Color coding based on which parts have changed
 - Ex: Green lines for added, red for delete, etc
 
+# 9/30 Meeting
+## Main file above src
+## More specific data folder
+## Future - speed of operations
+## Consistent class for building a tree
+ - Used in visualize and tree_metrics
