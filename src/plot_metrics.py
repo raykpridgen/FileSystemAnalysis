@@ -50,5 +50,7 @@ ax.xaxis.set_major_locator(t.MaxNLocator(integer=True))
 ax.axis('on')
 
 plt.tight_layout(rect=[0, 0.1, 1, 1])
+plt.grid(True)
+plt.xticks(iterations)
 
 plt.show()

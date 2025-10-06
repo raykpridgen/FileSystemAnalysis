@@ -98,62 +98,68 @@ def GUFI_to_zssNodes(GUFI_Path):
     :returns: The root node of the tree (FS_Node)
     :rtype: FS_Node
     """
+    def GUFI_to_zssNodesInner(GUFI_Path):
 
-    #Creating the root node
-    rootNode = FS_Node(os.path.basename(GUFI_Path))
+        #Creating the root node
+        rootNode = FS_Node(os.path.basename(GUFI_Path))
 
-    #Fetching all subdirectories/files and sorting them for tree consistency
-    currChildren = [] #List that will hold all the children of the current directory
+        #Fetching all subdirectories/files and sorting them for tree consistency
+        currChildren = [] #List that will hold all the children of the current directory
 
-    #Fetching all subdirectories, sorting them. and adding them to the list for all children
-    for name in os.listdir(GUFI_Path):
-        if name == ".DS_Store":
-            continue
-        if os.path.isdir(f"{GUFI_Path}/{name}"):
-            currChildren.append(name)
-    currChildren.sort()
+        #Fetching all subdirectories, sorting them. and adding them to the list for all children
+        for name in os.listdir(GUFI_Path):
+            if name == ".DS_Store":
+                continue
+            if os.path.isdir(f"{GUFI_Path}/{name}"):
+                currChildren.append(name)
+        currChildren.sort()
 
-    #Fetching the database file
-    for name in os.listdir(GUFI_Path):
-        if name == ".DS_Store":
-            continue
-        if os.path.isfile(f"{GUFI_Path}/{name}"):
-            currChildren.append(name)
+        #Fetching the database file
+        for name in os.listdir(GUFI_Path):
+            if name == ".DS_Store":
+                continue
+            if os.path.isfile(f"{GUFI_Path}/{name}"):
+                currChildren.append(name)
 
 
-    #Parsing through the names of the dir/files in the passed in directory
-    for name in currChildren:
-        #Ignoring macOS specific metadata files
-        if name == ".DS_Store":
-            continue
-        #If the current name is tied to a directory...
-        if os.path.isdir(f"{GUFI_Path}/{name}"):
-            #Create a new parent node by recursively calling the function with the path to the directory
-            #This lets you parse through subdirectories and files
-            childNode = GUFI_to_zssNodes(f"{GUFI_Path}/{name}")
+        #Parsing through the names of the dir/files in the passed in directory
+        for name in currChildren:
+            #Ignoring macOS specific metadata files
+            if name == ".DS_Store":
+                continue
+            #If the current name is tied to a directory...
+            if os.path.isdir(f"{GUFI_Path}/{name}"):
+                #Create a new parent node by recursively calling the function with the path to the directory
+                #This lets you parse through subdirectories and files
+                childNode = GUFI_to_zssNodesInner(f"{GUFI_Path}/{name}")
 
-            ###Folder metadata would be gathered here with a sqlite3 connection to the .db file in the directory
+                ###Folder metadata would be gathered here with a sqlite3 connection to the .db file in the directory
 
-            #Connect the new child node to the parent
-            rootNode.addkid(childNode)
-        #If the current name is tied to a file, it is a leaf node
-        elif os.path.isfile(f"{GUFI_Path}/{name}"):
-            #Simply create a leaf node and attach it to the parent
-            try:
-                conn = sqlite3.connect(f"{GUFI_Path}/{name}")
-                cur = conn.cursor()
-                #To fetch all data, SELECT * from entries
-                cur.execute("SELECT name FROM entries ORDER BY name ASC")
-                entries = cur.fetchall()
-                #print(row)
-                for file in entries:
-                    if file[0] == ".DS_Store":
-                        continue
-                    leafNode = FS_Node(file[0], False)
-                    rootNode.addkid(leafNode)
-            except Exception as e:
-                print(f"Skipping entries in {f"{GUFI_Path}/{name}"}: {e}")
-    #Return the root node, or parent node in the case of recursive function calls
+                #Connect the new child node to the parent
+                rootNode.addkid(childNode)
+            #If the current name is tied to a file, it is a leaf node
+            elif os.path.isfile(f"{GUFI_Path}/{name}"):
+                #Simply create a leaf node and attach it to the parent
+                try:
+                    conn = sqlite3.connect(f"{GUFI_Path}/{name}")
+                    cur = conn.cursor()
+                    #To fetch all data, SELECT * from entries
+                    cur.execute("SELECT name FROM entries ORDER BY name ASC")
+                    entries = cur.fetchall()
+                    #print(row)
+                    for file in entries:
+                        if file[0] == ".DS_Store":
+                            continue
+                        elif file[0][0:7] == "symlink":
+                            continue
+                        leafNode = FS_Node(file[0], False)
+                        rootNode.addkid(leafNode)
+                except Exception as e:
+                    print(f"Skipping entries in {f"{GUFI_Path}/{name}"}: {e}")
+        #Return the root node, or parent node in the case of recursive function calls
+        return rootNode
+    rootNode = GUFI_to_zssNodesInner(GUFI_Path)
+    rootNode = rootNode.children[0]
     return rootNode
 
 

@@ -11,18 +11,15 @@ MODIFIED_TREE_BASE_NAME="modified_tree"
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_DEPTH=$(( RANDOM % 3 + 1 ))
-TREES_DEGREE=$(( RANDOM % 3 + 2 ))
+TREES_MIN_DEPTH=$(( RANDOM % 2 + 1 ))
+TREES_MAX_DEPTH=$(( RANDOM % 2 + 3 ))
 
 # Generate random parameters for modify.py
-# Max new files (3-5), and probabilities (0.1-0.5)
-MAX_NEW_FILES=$(( RANDOM % 10 ))
-DELETE_PROB=$(awk 'BEGIN{srand(); printf "%.2f\n", (rand() * 0.4 + 0.1)}')
-EDIT_PROB=$(awk 'BEGIN{srand(); printf "%.2f\n", (rand() * 0.4 + 0.1)}')
-CREATE_PROB=$(awk 'BEGIN{srand(); printf "%.2f\n", (rand() * 0.4 + 0.1)}')
+# Max new files (0 - 3)
+MAX_NEW_FILES=$(( RANDOM % 4 ))
 
 # Hardcode iterations for testing purposes
-ITERATIONS=5
+ITERATIONS=$1
 
 # Define GUFI index names
 GUFI_ORIGINAL_INDEX="gufi_index_${ORIGINAL_TREE_NAME}"
@@ -36,50 +33,52 @@ GUFI_MODIFIED_INDEX_BASE_NAME="gufi_index_${MODIFIED_TREE_BASE_NAME}"
 # --- 2. Execute the workflow ---
 echo "--- Starting File Tree Comparison Workflow ---"
 echo "Creating initial tree: ${ORIGINAL_TREE_NAME}"
-echo "Parameters: depth=${TREES_DEPTH}, degree=${TREES_DEGREE}"
+echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
 
 beforeTreeGen=${SECONDS}
-python3 trees.py "${ORIGINAL_TREE_NAME}" "${TREES_DEPTH}" "${TREES_DEGREE}"
+python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
 treeGenTime=$((SECONDS-beforeTreeGen))
 
 
 echo "Initial tree created successfully."
 echo ""
 
+sleep 1
 
 echo "Modifying the tree: ${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}"
-echo "Parameters: max_new_files=${MAX_NEW_FILES}, delete_prob=${DELETE_PROB}, edit_prob=${EDIT_PROB}, create_prob=${CREATE_PROB}, iterations=${ITERATIONS}"
+echo "Parameters: max_new_files=${MAX_NEW_FILES}, iterations=${ITERATIONS}"
 
 beforeModTree=${SECONDS}
-python3 modify.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${DELETE_PROB}" "${EDIT_PROB}" "${CREATE_PROB}" "${ITERATIONS}"
+python3 modify.py "../data/${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${ITERATIONS}"
 modTreeTime=$((SECONDS-beforeModTree))
 
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
 
+sleep 2
 
 echo "Creating GUFI indexes..."
 echo "Creating index for original tree: ${GUFI_ORIGINAL_INDEX}"
 beforeGUFIcreate=${SECONDS}
-gufi_dir2index "${ORIGINAL_TREE_NAME}" "${GUFI_ORIGINAL_INDEX}"
+gufi_dir2index "../data/${ORIGINAL_TREE_NAME}" "../data/${GUFI_ORIGINAL_INDEX}"
 echo ""
 echo "Creating index for modified trees, base name: ${GUFI_MODIFIED_INDEX_BASE_NAME}"
 
 if [ "$ITERATIONS" -gt 1 ]; then
     for ((i=0; i<ITERATIONS; i++)); do
-        gufi_dir2index "${MODIFIED_TREE_BASE_NAME}$i" "${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
+        gufi_dir2index "../data/${MODIFIED_TREE_BASE_NAME}$i" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
         echo "GUFI index creation complete."
         echo ""
     done
 else
-    gufi_dir2index "${MODIFIED_TREE_BASE_NAME}0" "${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+    gufi_dir2index "$../data/{MODIFIED_TREE_BASE_NAME}0" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
     echo "GUFI index creation complete."
     echo ""
 fi
 GUFIcreateTime=$((SECONDS-beforeGUFIcreate))
 
 
-
+sleep 2
 
 echo "--- Running Comparisons ---"
 
@@ -93,10 +92,10 @@ if [ "$ITERATIONS" -gt 1 ]; then
     #python3 compare_trees.py "${GUFI_ORIGINAL_INDEX}" "${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi
     
     #Gathering the raw file system data for comparison
-    FS_Metrics=($(python3 compare_trees.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" -r))
+    FS_Metrics=($(python3 compare_trees.py "../data/${ORIGINAL_TREE_NAME}" "../data/${MODIFIED_TREE_BASE_NAME}0" -r))
 
     #Gathering the raw GUFI index data for comparison
-    GUFI_Metrics=($(python3 compare_trees.py "${GUFI_ORIGINAL_INDEX}" "${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi -r))
+    GUFI_Metrics=($(python3 compare_trees.py "../data/${GUFI_ORIGINAL_INDEX}" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi -r))
 
     #Echo whether the metrics gathered from the FS (file system) and GUFI match or not
     #If both FS data and GUFI data match, FS data is sent to "metrics.txt"
@@ -128,8 +127,8 @@ if [ "$ITERATIONS" -gt 1 ]; then
         #python3 compare_trees.py "${MODIFIED_TREE_BASE_NAME}$((i-1))" "${MODIFIED_TREE_BASE_NAME}$i"
         #python3 compare_trees.py "${GUFI_MODIFIED_INDEX_BASE_NAME}$((i-1))" "${GUFI_MODIFIED_INDEX_BASE_NAME}$i" --gufi
         
-        FS_Metrics=($(python3 compare_trees.py "${MODIFIED_TREE_BASE_NAME}$((i-1))" "${MODIFIED_TREE_BASE_NAME}$i" -r))
-        GUFI_Metrics=($(python3 compare_trees.py "${GUFI_MODIFIED_INDEX_BASE_NAME}$((i-1))" "${GUFI_MODIFIED_INDEX_BASE_NAME}$i" --gufi -r))
+        FS_Metrics=($(python3 compare_trees.py "../data/${MODIFIED_TREE_BASE_NAME}$((i-1))" "../data/${MODIFIED_TREE_BASE_NAME}$i" -r))
+        GUFI_Metrics=($(python3 compare_trees.py "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$((i-1))" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i" --gufi -r))
 
         #Echo whether the metrics gathered from the FS (file system) and GUFI match or not
         #If both FS data and GUFI data match, FS data is sent to "metrics.txt"
@@ -166,10 +165,10 @@ else
     #python3 compare_trees.py "${GUFI_ORIGINAL_INDEX}" "${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi
 
     #Gathering the raw file system data for comparison
-    FS_Metrics=($(python3 compare_trees.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" -r))
+    FS_Metrics=($(python3 compare_trees.py "../data/${ORIGINAL_TREE_NAME}" "../data/${MODIFIED_TREE_BASE_NAME}0" -r))
 
     #Gathering the raw GUFI index data for comparison
-    GUFI_Metrics=($(python3 compare_trees.py "${GUFI_ORIGINAL_INDEX}" "${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi -r))
+    GUFI_Metrics=($(python3 compare_trees.py "../data/${GUFI_ORIGINAL_INDEX}" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0" --gufi -r))
 
     #Echo whether the metrics gathered from the FS (file system) and GUFI match or not
     #If both FS data and GUFI data match, FS data is sent to "metrics.txt"
@@ -209,8 +208,8 @@ echo "Tree comparison time: $comparisonTime seconds"
 
 # --- 3. Optional Plot Display (uncomment to enable) ---
 # To automatically display a plot with the metrics data generated, uncomment the lines below.
-echo ""
-python3 plot_metrics.py
+#echo ""
+#python3 plot_metrics.py
 
 
 
@@ -222,25 +221,25 @@ python3 plot_metrics.py
 # Fast program completion may result in leftover files/directories otherwise
 echo ""
 echo "Tree deletion in progress, please wait..."
-sleep 2
+sleep 3
 
 if [ "$ITERATIONS" -gt 1 ]; then
-    rm -rf "${ORIGINAL_TREE_NAME}" 
-    rm -rf "${MODIFIED_TREE_BASE_NAME}0"
+    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
+    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
 
-    rm -rf "${GUFI_ORIGINAL_INDEX}" 
-    rm -rf "${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
+    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
 
     for ((i=1; i<ITERATIONS; i++)); do
-        rm -rf "${MODIFIED_TREE_BASE_NAME}$i"
-        rm -rf "${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
+        rm -rf "../data/${MODIFIED_TREE_BASE_NAME}$i"
+        rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
     done
 else
-    rm -rf "${ORIGINAL_TREE_NAME}" 
-    rm -rf "${MODIFIED_TREE_BASE_NAME}0"
+    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
+    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
 
-    rm -rf "${GUFI_ORIGINAL_INDEX}" 
-    rm -rf "${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
+    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
 fi
 
 echo "Tree deletion complete"
