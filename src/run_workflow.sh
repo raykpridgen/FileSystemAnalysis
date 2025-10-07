@@ -11,12 +11,12 @@ MODIFIED_TREE_BASE_NAME="modified_tree"
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_MIN_DEPTH=$(( RANDOM % 15 + 1 ))
-TREES_MAX_DEPTH=$(( RANDOM % 15 + 3 ))
+TREES_MIN_DEPTH=$(( 10 ))
+TREES_MAX_DEPTH=$(( 20 ))
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
-MAX_NEW_FILES=$(( RANDOM % 4 ))
+MAX_NEW_FILES=$(( 50 ))
 
 # Hardcode iterations for testing purposes
 ITERATIONS=$1

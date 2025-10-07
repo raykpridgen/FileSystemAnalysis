@@ -94,7 +94,7 @@
             "createFile" : 0.4, 
             "createFolder" : 0.4,
             "editFile" : 0.3, 
-            "deleteFolder" : 0.001,
+            "deleteFolder" : 0.005,
             "deleteFile" : 0.1,
             "createDepth" : 3,
             "root" : -1
