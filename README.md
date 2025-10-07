@@ -5,25 +5,29 @@
 ## Move into the src directory
 `cd FileSystemAnalysis/src`
 
+## Install dependencies
+`./make_venv.sh`
 
-# Making file trees
-trees.py makes a tree with parameters <root_name> <depth> <degree>
-Depth is how far the subdirs go, degree is how many files / folders are at each level (with randomness)
+# Generating Filesystem Trees
+treeGen.py is the script used to generate trees, located in the /src folder. This will generate a psuedorandom file tree using probabilities in JSON and input parameters. Commandline arguments are as follows:
 
-`python3 trees.py <root_name> <depth> <degree>`
+## To generate a new tree in the /data folder
+`python3 treeGen.py <name_of_root_directory> <minimum_depth> <maximum_depth>`
+
+## Remove tree(s)
+`python3 treeGen.py clean <root_name> <number_of_trees_to_remove>`
+
+- If the number is set to 0, it will only remove 1 dir associated with the name passed.
 
 
-modify.py makes changes to an initial tree, with iterations possible
-first two are names, max_new is the max number of files the program will add, delete prob is the probability it will delete a file or folder, edit prob is the probability it will edit a given file, create prob is the probability it will make a file or folder, and iterations is how many changed trees to generate, operating off of the last edited tree to generate the next one.
+# Mofifying Filesystem Trees
+modify.py operates on an existing filesystem tree, modeling psuedorandom changes to a tree in time steps. This script may add, delete, or change files, folders, and symlinks based on probabilities provided via JSON.
 
-`python3 modify.py <original_name> <modified_name> <max_new_files> <delete_prob> <edit_prob> <create_prob> <iterations>`
+`python3 modify.py <original_name> <modified_name> <max_new_files> <iterations>`
 
-
-clean.py removes any dirs to streamline work
-<dir_to_remove> is the name of the folder to remove, <dirs_to_remove> selects how to remove. If it is 0, it will remove the one dir, but greater than 0 will remove all dirs made with the scheme used by modify.py. So an example might be to remove the original dir with <dirs_to_remove> = 0, and then run with <> = 3 to remove 3 modified iterations.
-
-`python3 clean.py <dir_to_remove> <dirs_to_remove>`
-
+- First two inputs are the root to edit, and the name of the root to place the modified tree in
+- max_new_files is the maximum number of files modify.py will add to the tree
+- Iterations determines how many times this process will repeat. It will iterate using the same process, running a further iteration on the newly generated tree. 
 
 
 # Gather metrics on the file trees
