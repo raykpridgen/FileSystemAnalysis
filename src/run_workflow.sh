@@ -11,8 +11,8 @@ MODIFIED_TREE_BASE_NAME="modified_tree"
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_MIN_DEPTH=$(( RANDOM % 2 + 1 ))
-TREES_MAX_DEPTH=$(( RANDOM % 2 + 3 ))
+TREES_MIN_DEPTH=$(( RANDOM % 15 + 1 ))
+TREES_MAX_DEPTH=$(( RANDOM % 15 + 3 ))
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
@@ -49,7 +49,7 @@ echo "Modifying the tree: ${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}"
 echo "Parameters: max_new_files=${MAX_NEW_FILES}, iterations=${ITERATIONS}"
 
 beforeModTree=${SECONDS}
-python3 modify.py "../data/${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${ITERATIONS}"
+python3 modify.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${ITERATIONS}"
 modTreeTime=$((SECONDS-beforeModTree))
 
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"

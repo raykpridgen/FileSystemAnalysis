@@ -1,0 +1,135 @@
+{
+    "degree": {
+        "default": {
+            "0": 0.15,
+            "1": 0.17,
+            "2": 0.13,
+            "3": 0.14,
+            "4": 0.05,
+            "5": 0.08,
+            "6": 0.09,
+            "7": 0.06,
+            "8": 0.05,
+            "9": 0.05,
+            "10": 0.03
+        },
+        "high_degree": {
+            "0": 0.05,
+            "1": 0.08,
+            "2": 0.12,
+            "3": 0.16,
+            "4": 0.20,
+            "5": 0.15,
+            "6": 0.10,
+            "7": 0.08,
+            "8": 0.04,
+            "9": 0.02
+        },
+        "low_degree": {
+            "0": 0.25,
+            "1": 0.20,
+            "2": 0.18,
+            "3": 0.12,
+            "4": 0.10,
+            "5": 0.08,
+            "6": 0.04,
+            "7": 0.03
+        }
+    },
+
+    "filetypes": {
+        "default": {
+            ".txt" : 0.166, 
+            ".csv" : 0.167, 
+            ".json" : 0.166, 
+            ".log" : 0.167, 
+            ".md" : 0.166, 
+            ".xml" : 0.167
+        }
+    },
+
+    "permissions": {
+        "default": {
+            "0o666" : 0.55,
+            "0o644" : 0.25,
+            "0o444" : 0.15,
+            "0o744" : 0.05
+        }
+    },
+
+    "size": {
+        "default": {
+            "small": {"range": [0, 1000], "prob": 0.56},
+            "medium": {"range": [1000, 10000], "prob": 0.41},
+            "large": {"range": [1000000, 5000000], "prob": 0.03}
+        },
+        "compact": {
+            "small": {"range": [0, 500], "prob": 0.50},
+            "medium": {"range": [500, 10000], "prob": 0.45},
+            "large": {"range": [10000, 100000], "prob": 0.05}
+        },
+        "large_files": {
+            "small": {"range": [0, 1000], "prob": 0.30},
+            "medium": {"range": [1000, 10000], "prob": 0.31},
+            "large": {"range": [1000000, 5000000], "prob": 0.39}
+        }
+    },
+
+    "type": {
+        "default": {
+            "file" : 0.62,
+            "folder" : 0.36,
+            "symlink" : 0.02
+        },
+        
+        "no_symlink": {
+            "file" : 0.63,
+            "folder" : 0.37,
+            "symlink" : 0
+        }
+    },
+
+    "modify": {
+        "default": {
+            "createFile" : 0.4, 
+            "createFolder" : 0.4,
+            "editFile" : 0.3, 
+            "deleteFolder" : 0.001,
+            "deleteFile" : 0.1,
+            "createDepth" : 3,
+            "root" : -1
+        },
+        "growth": {
+            "createFile" : 0.5, 
+            "createFolder" : 0.5,
+            "editFile" : 0.6, 
+            "deleteFolder" : 0.01,
+            "deleteFile" : 0.2,
+            "createDepth" : 5,
+            "root" : -1
+        },
+        "shrink": {
+            "createFile" : 0.3, 
+            "createFolder" : 0.3,
+            "editFile" : 0.6, 
+            "deleteFolder" : 0.05,
+            "deleteFile" : 0.3,
+            "createDepth" : 5,
+            "root" : -1
+        },
+        "user_mode": {
+            "createFile" : 0.4, 
+            "createFolder" : 0.4,
+            "editFile" : 0.3, 
+            "deleteFolder" : 0.05,
+            "deleteFile" : 0.1,
+            "createDepth" : 3,
+            "root" : 3
+        }  
+    },
+
+    "metadata": {
+        "description": "Distribution parameters for filesystem tree generation.",
+        "version": 1.0
+    }
+}

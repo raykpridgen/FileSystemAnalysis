@@ -30,9 +30,29 @@ if [ "$1" == "clean" ]; then
     rm "$SAVE_TO_PATH"/*.html
     echo "Cleared plots folder."
     exit 0
-fi
 
-if [ $# -lt 2 ]; then
+elif [ "$1" == "view" ]; then
+    FILE_NAME="$SAVE_TO_PATH/$2.html"
+    echo "Viewing: $2.html"
+    open_browser "$FILE_NAME"
+
+elif [ "$1" == "visual" ]; then
+    
+    ROOT="$PULL_FROM_PATH/$2"
+    FILE_NAME="$SAVE_TO_PATH/$3.html"
+    python3 visualize.py "visual" "$ROOT" "$FILE_NAME"
+    open_browser "$FILE_NAME"
+    echo "Viewing: $3.html"
+
+elif [ "$1" == "compare" ]; then
+    ROOT_A="$PULL_FROM_PATH/$2"
+    ROOT_B="$PULL_FROM_PATH/$3"
+    FILE_NAME="$SAVE_TO_PATH/$4.html"
+    python3 visualize.py "compare" "$ROOT_A" "$ROOT_B" "$FILE_NAME"
+    open_browser "$FILE_NAME"
+    echo "Viewing: $2.html"
+
+else
     echo ""
     echo ""
     echo "This program automates usage for visualize.py, found in the same folder."
@@ -41,7 +61,10 @@ if [ $# -lt 2 ]; then
     echo " -- See usage statement for visualize.py for more information."
     echo ""
     echo "To generate a figure and open it within the browser:"
-    echo "Usage: $0 <root_name> <plot_file_name>"
+    echo "Usage: $0 visual <root_name> <save_path>"
+    echo ""
+    echo "To generate a figure comparing two plots, and open it within the browser:"
+    echo "Usage: $0 compare <original_root_name> <compare_root_name> <save_path>"
     echo ""
     echo "To view an already generated figure in the browser:"
     echo "Usage: $0 view <file_path>"
@@ -51,18 +74,6 @@ if [ $# -lt 2 ]; then
     echo ""
     echo ""
     exit 1
-fi
-
-if [ "$1" == "view" ]; then
-    FILE_NAME="$SAVE_TO_PATH/$2.html"
-    echo "Viewing: $2.html"
-    open_browser "$FILE_NAME"
-else
-    ROOT="$PULL_FROM_PATH/$1"
-    FILE_NAME="$SAVE_TO_PATH/$2.html"
-    python3 visualize.py "$ROOT" "$FILE_NAME"
-    open_browser "$FILE_NAME"
-    echo "Viewing: $2.html"
 fi
 
 
