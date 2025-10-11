@@ -2,15 +2,15 @@
 
 ## Standardize Setup
 - requirements.txt
-- script to make venv?
+- script to make venv -- COMPLETE
 - thorough usage statements
 
 ## Centralize workflow
 ### Possible structure
 Generate: includes creation and modifcation
- - treeGen.py
- - modify.py (may be merged)
- - dists folder for params
+ - treeGen.py -- ADDED MORE PARAMS
+ - modify.py (may be merged) -- ADDED MORE PARAMS
+ - dists folder for params -- SWITCHED TO FILE
 
 Analyze: 
  - plot_metrics.py
@@ -19,7 +19,7 @@ Analyze:
  - run_workflow.sh
 
 Visualize:
-- visualize.py
+- visualize.py -- ADDED COMPARE FEATURE
 - visual.sh
 
 GUFI:
@@ -32,11 +32,11 @@ GUFI:
 
 ## Visualization
 
-### Clarify plot output
+### Clarify plot output -- COMPLETE
 - Clunky graph, make children centered under each parent node
 - Add coloring for parent and leaf nodes?
 
-### Future features
+### Future features -- COMPLETE
 - Functionality that shows changes to a tree over iterations
 - Color coding based on which parts have changed
 - Ex: Green lines for added, red for delete, etc
@@ -47,3 +47,7 @@ GUFI:
 ## Future - speed of operations
 ## Consistent class for building a tree
  - Used in visualize and tree_metrics
+
+# 10/7 Meeting
+## Speed up compare_trees
+## Add changes output from modify.py
