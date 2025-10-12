@@ -4,10 +4,35 @@
 # This script automates the full file tree comparison workflow.
 # =================================================================
 
+
+# Determining if valid command line arguments were passed in
+if [ "$#" -eq 0 ]; then
+    ITERATIONS=1
+    RUN_NUMBER=1
+elif [ "$#" -eq 1 ] && [[ "$1" =~ ^[0-9]+$ ]]; then
+    ITERATIONS=$1
+    RUN_NUMBER=1
+#Checking if there is a valid run number passed in
+elif [ "$#" -eq 2 ] && [[ "$1" =~ ^[0-9]+$ ]] && [[ "$2" =~ ^[0-9]+$ ]]; then
+    ITERATIONS=$1
+    RUN_NUMBER=$2
+else
+  echo "Usage: $0 [iterations] [run_number]"
+  echo "     iterations (integer) - determines how many tree modifications take place"
+  echo "     run_number (integer) - is used to number the output files for subsequent runs"
+  echo "     Both values default to 1 with no input"
+  exit 1 # Exit with an error code
+fi
+
+
 # --- 1. Define filenames and parameters ---
 
 ORIGINAL_TREE_NAME="original_tree"
 MODIFIED_TREE_BASE_NAME="modified_tree"
+
+mkdir -p ../data
+mkdir -p ../metrics
+mkdir -p ../plots
 
 # Generate random parameters for trees.py
 # Depth and Degree
@@ -16,10 +41,10 @@ TREES_MAX_DEPTH=$(( 20 ))
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
-MAX_NEW_FILES=$(( 50 ))
+MAX_NEW_FILES=$(( 20 ))
 
 # Hardcode iterations for testing purposes
-ITERATIONS=$1
+
 
 # Define GUFI index names
 GUFI_ORIGINAL_INDEX="gufi_index_${ORIGINAL_TREE_NAME}"
@@ -71,7 +96,7 @@ if [ "$ITERATIONS" -gt 1 ]; then
         echo ""
     done
 else
-    gufi_dir2index "$../data/{MODIFIED_TREE_BASE_NAME}0" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+    gufi_dir2index "../data/${MODIFIED_TREE_BASE_NAME}0" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
     echo "GUFI index creation complete."
     echo ""
 fi
@@ -102,10 +127,10 @@ if [ "$ITERATIONS" -gt 1 ]; then
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > metrics.txt
+        echo "${FS_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > metrics.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -135,11 +160,11 @@ if [ "$ITERATIONS" -gt 1 ]; then
         #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
         if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
-            echo "${FS_Metrics[@]}" >> metrics.txt
+            echo "${FS_Metrics[@]}" >> ../metrics/metrics${RUN_NUMBER}.txt
         else
             echo ""
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : DOES NOT MATCH"
-            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> metrics.txt
+            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> ../metrics/metrics${RUN_NUMBER}.txt
             for ((j=0; j<${#FS_Metrics[@]}; j++)); do
                 if [ "${FS_Metrics[j]}" != "${GUFI_Metrics[j]}" ]; then
                     if [ "$j" -eq 0 ]; then
@@ -175,10 +200,10 @@ else
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > metrics.txt
+        echo "${FS_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > metrics.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -208,8 +233,8 @@ echo "Tree comparison time: $comparisonTime seconds"
 
 # --- 3. Optional Plot Display (uncomment to enable) ---
 # To automatically display a plot with the metrics data generated, uncomment the lines below.
-#echo ""
-#python3 plot_metrics.py
+echo ""
+python3 plot_metrics.py "$2"
 
 
 
