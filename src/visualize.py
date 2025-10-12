@@ -4,9 +4,11 @@ from pathlib import Path
 import plotly.graph_objects as go
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
+from utils import getTimeInMs
+import time
 
 class TreeVisualizer:
-    def __init__(self, rootA, rootB=None, fileSavePath="output"):
+    def __init__(self, rootA, rootB=None, fileSavePath="output", timing=False):
         # Validate paths
         if not os.path.exists(rootA):
             raise FileNotFoundError(f"Root path does not exist: {rootA}")
@@ -16,13 +18,21 @@ class TreeVisualizer:
         # Assign paths and build adjacency representation
         self.fileSavePath = fileSavePath
         self.rootA = Path(rootA).resolve()
+        self.timing = timing
+
+        startAdjA = time.perf_counter() if self.timing else None
         self.graphA = self.build_adjacency_graph(self.rootA)
+        endAdjA = time.perf_counter() if self.timing else None
+        print(f"Built adjacency graph for {rootA} in {getTimeInMs(startAdjA, endAdjA)} ms")
         
         if rootB:
             if not os.path.exists(rootB):
                 raise FileNotFoundError(f"Root path does not exist: {rootB}")
             self.rootB = Path(rootB).resolve()
+            startAdjB = time.perf_counter() if self.timing else None
             self.graphB = self.build_adjacency_graph(self.rootB)
+            endAdjB = time.perf_counter() if self.timing else None
+            print(f"Built adjacency graph for {rootB} in {getTimeInMs(startAdjB, endAdjB)} ms")
         
         # Generate and save visualization
         if hasattr(self, "graphB"):
@@ -65,6 +75,7 @@ class TreeVisualizer:
     
     def visualize_single_tree(self):
         """Render a single directory tree as an interactive HTML visualization."""
+        startVisSingle = time.perf_counter() if self.timing else None
         G = nx.DiGraph()
         for parent, children in self.graphA.items():
             for child in children:
@@ -125,8 +136,11 @@ class TreeVisualizer:
             title="Directory Tree"
         )
         figure.write_html(f"{self.fileSavePath}", auto_open=False)
+        endVisSingle = time.perf_counter() if self.timing else None
+        print(f"Visualized and saved figure for a single graph in {getTimeInMs(startVisSingle, endVisSingle)} ms")
 
     def visualize_comparison(self):
+        startComparison = time.perf_counter() if self.timing else None
         """Render a comparison of two directory trees as an interactive HTML visualization."""
         G = self.merge_graphs()
 
@@ -263,6 +277,8 @@ class TreeVisualizer:
             title="Directory Tree Comparison"
         )
         figure.write_html(f"{self.fileSavePath}", auto_open=False)
+        endComparison = time.perf_counter() if self.timing else None
+        print(f"Visualized and saved figure for two graphs in {getTimeInMs(startComparison, endComparison)} ms")
 
 if __name__ == "__main__":
     if sys.argv[1] == "visual" and len(sys.argv) == 4:

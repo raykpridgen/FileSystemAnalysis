@@ -7,6 +7,8 @@ import sys
 import random
 import time
 import json
+from utils import getTimeInMs
+
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
@@ -147,12 +149,18 @@ class ArtificialTree:
     # Generate random file extension
     # Generate tree from params
     def generate_tree(self):
+        startGenTime = time.perf_counter()
+    
         # Create root dir
         root = Path(self.rootName)
+        # remove old root if same name exists
         clean_tree(root)
         root.mkdir(parents=True, exist_ok=True)
         os.chmod(root, 0o755)
         self.gen_tree_atlevel(0, root)
+
+        endGenTime = time.perf_counter()
+        print(f"Generated tree '{str(newTree.rootName)[8:]}' in {getTimeInMs(startGenTime, endGenTime)} ms.")
 
     # Generate at a level, utilize recursion
     def gen_tree_atlevel(self, depth, root, max_files=-1):
@@ -282,21 +290,34 @@ Remove tree(s):
 
     # Handle CLEAN operation
     if args[0] == "clean":
-        if len(args) < 3:
+        if len(args) < 2:
             print("Usage: python3 treeGen.py clean <root_name> <num_remove>")
             sys.exit(1)
-
-        root, num = args[1], int(args[2])
-
-        if num == 0:
+        
+        elif len(args) == 2:
+            root = args[1]
+            startTimeClean = time.perf_counter()
             clean_tree(f"{SAVE_TO_DIR}{root}")
-            print(f"Removed tree at {SAVE_TO_DIR}{root}")
-        else:
-            for i in range(num):
-                clean_tree(f"{SAVE_TO_DIR}{root}{i}")
-                print(f"Removed tree at {SAVE_TO_DIR}{root}{i}")
+            endTimeClean = time.perf_counter()
+            print(f"Removed tree at '{root}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
+            sys.exit(0)
 
-        sys.exit(0)
+        else:
+            root, num = args[1], int(args[2])
+
+            for i in range(-1, num):
+                if i == -1:
+                    startTimeClean = time.perf_counter()
+                    clean_tree(f"{SAVE_TO_DIR}{root}")
+                    endTimeClean = time.perf_counter()
+                    print(f"Removed tree at '{root}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
+                else:
+                    startTimeClean = time.perf_counter()
+                    clean_tree(f"{SAVE_TO_DIR}{root}{i}")
+                    endTimeClean = time.perf_counter()
+                    print(f"Removed tree at '{root}{i}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
+            
+            sys.exit(0)
 
     # Handle GENERATION
     if len(args) < 3:
