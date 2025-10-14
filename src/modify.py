@@ -8,8 +8,9 @@ import json
 import math
 import time
 from treeGen import ArtificialTree
-
+from utils import getTimeInMs
 SAVE_TO_DIR = "../data/"
+
 def parse_edit_params(edit_mode="default"):
     
     # Load JSON from file
@@ -40,7 +41,6 @@ def parse_dist_params(degree_mode="low_degree", filetype_mode="default", file_ex
 
     return degree_distr, fileType_distr, fileExt_distr, permissions_distr, size_distr
 
-
 class ModifyTree:
     def __init__(self, originalRoot, newRoot, maxNew, iterations):
         # Original root
@@ -69,14 +69,16 @@ class ModifyTree:
 
     # Top function
     def modify_tree(self):
-        print(f"Modifying folder {self.originalRoot}")
+        
+        print(f"Modifying folder '{str(self.originalRoot)[8:]}'")
         # For each iteration
         for i in range(self.iterations):
+            startModifyTime = time.perf_counter()
             # Old root is original if just started, otherwise it is the previous root operated on
             oldRoot = self.originalRoot if i == 0 else self.newRootList[i-1]
             # Current path to operate on
             newRoot = self.newRootList[i]
-            print(f"Making folder {newRoot}")
+            print(f"Making folder: '{str(newRoot)[8:]}'")
             # Remove junk tree if it exists
             if newRoot.exists():
                 shutil.rmtree(newRoot)
@@ -86,7 +88,9 @@ class ModifyTree:
             
             # Modify the tree with given parameters
             self.modify_recurse(newRoot, 0)
-
+            endModifyTime = time.perf_counter()
+            print(f"Modified tree '{str(oldRoot)[8:]}' in {getTimeInMs(startModifyTime, endModifyTime)} ms.")
+        
     # Recursively edit a tree
     def modify_recurse(self, root, files_made):
         localDepthAndFiles = max(1, int(math.log(max(2, self.maxNew))))
