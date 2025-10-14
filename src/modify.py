@@ -47,8 +47,15 @@ class ModifyTree:
         self.originalRoot = Path(f"{SAVE_TO_DIR}{originalRoot}")
         # Max new files to be added to the new tree
         self.maxNew = maxNew
+        # User mode
+        self.userMode = True
         # Dict of edit probabilities
-        self.editProbs = parse_edit_params()
+        if (self.userMode):
+            self.editProbs = parse_edit_params("user_mode")
+        else:
+            self.editProbs = parse_edit_params()
+        # Level of user home dirs
+        self.userHome = self.editProbs["root"]
         # Iterations, num of trees to generate
         self.iterations = iterations
         # List to easily maintain each iteration of the modification
@@ -87,12 +94,15 @@ class ModifyTree:
             shutil.copytree(oldRoot, newRoot, symlinks=True)
             
             # Modify the tree with given parameters
-            self.modify_recurse(newRoot, 0)
+            if self.userMode:
+                self.modify_recurse_user(newRoot, 0, 0)
+            else:    
+                self.modify_recurse(newRoot, 0, 0)
             endModifyTime = time.perf_counter()
             print(f"Modified tree '{str(oldRoot)[8:]}' in {getTimeInMs(startModifyTime, endModifyTime)} ms.")
         
     # Recursively edit a tree
-    def modify_recurse(self, root, files_made):
+    def modify_recurse(self, root, files_made, current_depth):
         localDepthAndFiles = max(1, int(math.log(max(2, self.maxNew))))
         treeCreateDepth = self.editProbs["createDepth"]
         # Iterate through direct children at this levels
@@ -105,7 +115,7 @@ class ModifyTree:
                         shutil.rmtree(entry)
                         continue
                     # If not deleted, recurse into the subdir
-                    files_made += self.modify_recurse(entry, files_made)
+                    files_made += self.modify_recurse(entry, files_made, current_depth+1)
                 
                 # Files
                 elif entry.is_file():
@@ -147,6 +157,68 @@ class ModifyTree:
                     files_made += 1
 
         if files_made < self.maxNew:
+            # Create folders
+            if ran.random() < self.editProbs["createFolder"]:
+                files_made += tempTree.gen_tree_atlevel(treeCreateDepth, root, max_files=max(0, self.maxNew - files_made))
+        
+        return files_made
+
+    def modify_recurse_user(self, root, files_made, current_depth):
+        localDepthAndFiles = max(1, int(math.log(max(2, self.maxNew))))
+        treeCreateDepth = self.editProbs["createDepth"]
+        # Iterate through direct children at this levels
+        for entry in root.iterdir():
+            if files_made < self.maxNew:
+                # Folders
+                if entry.is_dir() and self.userHome <= current_depth:
+                    # Delete based on probability
+                    if ran.random() < self.editProbs["deleteFolder"]:
+                        shutil.rmtree(entry)
+                        continue
+                    # If not deleted, recurse into the subdir
+                    files_made += self.modify_recurse(entry, files_made, current_depth+1)
+                
+                # Files
+                elif entry.is_file() and self.userHome <= current_depth:
+                    # Randomly edit a file
+                    if ran.random() < self.editProbs["editFile"]:
+                        # Open and add data
+                        try:
+                            with open (entry, "a") as f:
+                                size = ran.randint(500, 1000)
+                                fileText = "".join(ran.choices(string.ascii_letters + string.digits, k=size))
+                                f.write(fileText)
+                        # Skip if permissions were set in a certain way
+                        except PermissionError:
+                            pass
+
+                    # Randomly delete a file
+                    elif ran.random() < self.editProbs["deleteFile"]:
+                        entry.unlink()
+            else:
+                return files_made
+        
+        if files_made < self.maxNew and self.userHome <= current_depth: 
+            # Creation of files and folders
+            # Use an ArtificialTree object to leverage functionality
+            tempTree = self.makeTempTree(root, treeCreateDepth)
+            
+            # Create files - Max at a level is log of max new
+            for _ in range(ran.randint(0, localDepthAndFiles)):
+                if files_made >= self.maxNew:
+                    break
+                if ran.random() < self.editProbs["createFile"]:
+                    # Build file path and type
+                    fileExt = tempTree.sample_Extensions()
+                    filePath = root / f"newfile_{ran.randint(0, 500)}{fileExt}"
+                    # Write random data to the file
+                    with open(filePath, "w") as f:
+                        size = tempTree.sample_size()
+                        fileText = "".join(ran.choices(string.ascii_letters + string.digits, k=size))
+                        f.write(fileText)
+                    files_made += 1
+
+        if files_made < self.maxNew and self.userHome <= current_depth:
             # Create folders
             if ran.random() < self.editProbs["createFolder"]:
                 files_made += tempTree.gen_tree_atlevel(treeCreateDepth, root, max_files=max(0, self.maxNew - files_made))
