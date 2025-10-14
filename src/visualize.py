@@ -23,7 +23,8 @@ class TreeVisualizer:
         startAdjA = time.perf_counter() if self.timing else None
         self.graphA = self.build_adjacency_graph(self.rootA)
         endAdjA = time.perf_counter() if self.timing else None
-        print(f"Built adjacency graph for {rootA} in {getTimeInMs(startAdjA, endAdjA)} ms")
+        if self.timing:
+            print(f"Built adjacency graph for {rootA} in {getTimeInMs(startAdjA, endAdjA)} ms")
         
         if rootB:
             if not os.path.exists(rootB):
@@ -32,7 +33,8 @@ class TreeVisualizer:
             startAdjB = time.perf_counter() if self.timing else None
             self.graphB = self.build_adjacency_graph(self.rootB)
             endAdjB = time.perf_counter() if self.timing else None
-            print(f"Built adjacency graph for {rootB} in {getTimeInMs(startAdjB, endAdjB)} ms")
+            if self.timing:
+                print(f"Built adjacency graph for {rootB} in {getTimeInMs(startAdjB, endAdjB)} ms")
         
         # Generate and save visualization
         if hasattr(self, "graphB"):
@@ -137,7 +139,8 @@ class TreeVisualizer:
         )
         figure.write_html(f"{self.fileSavePath}", auto_open=False)
         endVisSingle = time.perf_counter() if self.timing else None
-        print(f"Visualized and saved figure for a single graph in {getTimeInMs(startVisSingle, endVisSingle)} ms")
+        if self.timing:
+            print(f"Visualized and saved figure for a single graph in {getTimeInMs(startVisSingle, endVisSingle)} ms")
 
     def visualize_comparison(self):
         startComparison = time.perf_counter() if self.timing else None
@@ -278,7 +281,8 @@ class TreeVisualizer:
         )
         figure.write_html(f"{self.fileSavePath}", auto_open=False)
         endComparison = time.perf_counter() if self.timing else None
-        print(f"Visualized and saved figure for two graphs in {getTimeInMs(startComparison, endComparison)} ms")
+        if self.timing:
+            print(f"Visualized and saved figure for two graphs in {getTimeInMs(startComparison, endComparison)} ms")
 
 if __name__ == "__main__":
     if sys.argv[1] == "visual" and len(sys.argv) == 4:

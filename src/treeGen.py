@@ -7,31 +7,11 @@ import sys
 import random
 import time
 import json
-from utils import getTimeInMs
-
+from utils import getTimeInMs, parse_dist_params
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
 SAVE_TO_DIR = "../data/"
-
-def parse_dist_params(degree_mode="low_degree", filetype_mode="default", file_ext_mode="default", permissions_mode="default", size_mode="default"):
-    
-    # Load JSON from file
-    with open("dists/params.json", 'r') as f:
-        params = json.load(f)
-
-    # Degree
-    degree_distr = {int(k): v for k, v in params["degree"][degree_mode].items()}
-    # File type
-    fileType_distr = {k: v for k, v in params["type"][filetype_mode].items()}
-    # Extensions
-    fileExt_distr = {k: v for k, v in params["filetypes"][file_ext_mode].items()}
-    # Permissions
-    permissions_distr = {int(k, 8): v for k, v in params["permissions"][permissions_mode].items()}
-    # Sizes
-    size_distr = {k: v for k, v in params["size"][size_mode].items()}
-
-    return degree_distr, fileType_distr, fileExt_distr, permissions_distr, size_distr
 
 # Clean up previous run with same name
 def clean_tree(rootName):
@@ -292,15 +272,15 @@ Remove tree(s):
         sys.exit(0)
 
     # Handle CLEAN operation
-        if args[0] == "clean":
-            if len(args) < 2:
-                print("Usage: python3 treeGen.py clean <root_name> <num_remove>")
-                sys.exit(1)
-            
-            elif len(args) == 2:
-                root = args[1]
-                clean_tree(f"{SAVE_TO_DIR}{root}")
-                sys.exit(0)
+    if args[0] == "clean":
+        if len(args) < 2:
+            print("Usage: python3 treeGen.py clean <root_name> <num_remove>")
+            sys.exit(1)
+        
+        elif len(args) == 2:
+            root = args[1]
+            clean_tree(f"{SAVE_TO_DIR}{root}")
+            sys.exit(0)
 
         else:
             root, num = args[1], int(args[2])
