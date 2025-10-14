@@ -6,15 +6,14 @@ import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 from utils import getTimeInMs
 import time
+import matplotlib.pyplot as plt
 
 class TreeVisualizer:
     def __init__(self, rootA, rootB=None, fileSavePath="output", timing=False):
         # Validate paths
         if not os.path.exists(rootA):
             raise FileNotFoundError(f"Root path does not exist: {rootA}")
-        if not os.path.isdir(fileSavePath) and not fileSavePath.endswith(".html"):
-            fileSavePath += ".html"
-
+        
         # Assign paths and build adjacency representation
         self.fileSavePath = fileSavePath
         self.rootA = Path(rootA).resolve()
@@ -137,7 +136,7 @@ class TreeVisualizer:
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             title="Directory Tree"
         )
-        figure.write_html(f"{self.fileSavePath}", auto_open=False)
+        figure.write_image(f"{self.fileSavePath}", format='png')
         endVisSingle = time.perf_counter() if self.timing else None
         if self.timing:
             print(f"Visualized and saved figure for a single graph in {getTimeInMs(startVisSingle, endVisSingle)} ms")
@@ -279,7 +278,9 @@ class TreeVisualizer:
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             title="Directory Tree Comparison"
         )
-        figure.write_html(f"{self.fileSavePath}", auto_open=False)
+        outPath = f"{self.fileSavePath}.png"
+        print(outPath)
+        figure.write_image(outPath, format='png')
         endComparison = time.perf_counter() if self.timing else None
         if self.timing:
             print(f"Visualized and saved figure for two graphs in {getTimeInMs(startComparison, endComparison)} ms")
