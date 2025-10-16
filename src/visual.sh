@@ -42,7 +42,7 @@ elif [ "$1" == "visual" ]; then
     FILE_NAME="$SAVE_TO_PATH/$3"
     python3 visualize.py "visual" "$ROOT" "$FILE_NAME"
     open_browser "$FILE_NAME"
-    echo "Viewing: $3"
+    echo "Generated png: $3"
 
 elif [ "$1" == "compare" ]; then
     ROOT_A="$PULL_FROM_PATH/$2"
@@ -50,7 +50,7 @@ elif [ "$1" == "compare" ]; then
     FILE_NAME="$SAVE_TO_PATH/$4"
     python3 visualize.py "compare" "$ROOT_A" "$ROOT_B" "$FILE_NAME"
     open_browser "$FILE_NAME"
-    echo "Viewing: $2"
+    echo "Generated png: $4"
 
 else
     echo ""

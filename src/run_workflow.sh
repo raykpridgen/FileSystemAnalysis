@@ -4,6 +4,41 @@
 # This script automates the full file tree comparison workflow.
 # =================================================================
 
+
+param=$1
+
+if [ -z "$param" ]; then
+    echo ""
+    echo ""
+    echo "This program automates usage for all major executions in this project, found in the src folder."
+    echo " -- Usage is expected for generating, modifying, plotting, and generating a report for a filesystem tree."
+    echo ""
+    echo "To execute this program, run:"
+    echo "    $0 <iterations>"
+    echo ""
+    echo "Applicable python files that execute an operation in this script include:"
+    echo ""
+    echo "-- treeGen.py"
+    echo "    Generates an artificial filesystem tree from many parameters that determine behavior."
+    echo ""
+    echo "-- modify.py"
+    echo "    Modifies an artificial filesystem tree with random operations over given iterations."
+    echo ""
+    echo "-- visualize.py"
+    echo "    Plots a visual graph representation of the tree generated, highlighting changes over iterations."
+    echo ""
+    echo "-- compare_trees.py"
+    echo "    Computes useful metrics for the nature of the filesystem tree and it's changes over iterations."
+    echo ""
+    echo "-- report_generator.py"
+    echo "    Generates a PDF report of all data generated, computed, and analyzed in this script."
+    echo ""
+    echo ""
+    echo "For more specific information on a particular script, see the usage statement by running: "
+    echo "    python3 <script>"
+    echo ""
+    exit 1
+fi
 # --- 1. Define filenames and parameters ---
 
 ORIGINAL_TREE_NAME="original_tree"
@@ -25,16 +60,16 @@ ITERATIONS=$1
 GUFI_ORIGINAL_INDEX="gufi_index_${ORIGINAL_TREE_NAME}"
 GUFI_MODIFIED_INDEX_BASE_NAME="gufi_index_${MODIFIED_TREE_BASE_NAME}"
 
-
-
-
-
-
 # --- 2. Execute the workflow ---
 echo "--- Starting File Tree Comparison Workflow ---"
 echo "Creating initial tree: ${ORIGINAL_TREE_NAME}"
 echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
+
+shopt -s nullglob
+rm ../report/images/*.png
+echo "Cleared data"
 > ../report/data/metrics.txt
+
 
 beforeTreeGen=${SECONDS}
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
@@ -55,6 +90,10 @@ modTreeTime=$((SECONDS-beforeModTree))
 
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
+
+echo "Visualizing tree development..."
+python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))" "${ORIGINAL_TREE_NAME}_plot.png"
+echo "${ORIGINAL_TREE_NAME}_plot.png saved"
 
 sleep 2
 
@@ -245,6 +284,9 @@ fi
 
 echo "Tree deletion complete"
 
+echo "Generating visuals..."
+PULL_FROM_PATH="../data"
+SAVE_TO_PATH="../report/images" 
 
 echo Generating report...
 python3 ../report/report_generator.py
