@@ -197,7 +197,6 @@ class TreeVisualizer:
             # Removed
             else:
                 edge_colors.append("salmon")
-        print(len(edge_colors))
         
         plt.figure(figsize=(12, 9))
 

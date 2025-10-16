@@ -101,10 +101,10 @@ modTreeTime=$((SECONDS-beforeModTree))
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
 
-echo "Visualizing tree development..."
+echo "Visualizing tree development between ${ORIGINAL_TREE_NAME} and ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))" "${ORIGINAL_TREE_NAME}_plot.png"
 echo "${ORIGINAL_TREE_NAME}_plot.png saved"
-
+echo ""
 sleep 2
 
 echo "Creating GUFI indexes..."
