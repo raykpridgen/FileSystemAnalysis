@@ -7,6 +7,8 @@ FOLDER_PATH="$(cd "$SCRIPT_DIR/../.." && pwd)"
 #echo "$SCRIPT_DIR"
 #echo "$FOLDER_PATH"
 
+mkdir ../data ../report/data ../report/images
+
 # If the actualy activate file exists
 if [ -f "$FOLDER_PATH/venv/bin/activate" ]; then
   # Activate venv and install dependencies
