@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-import plotly.graph_objects as go
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 from utils import getTimeInMs

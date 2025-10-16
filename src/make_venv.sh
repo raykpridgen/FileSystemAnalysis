@@ -14,7 +14,8 @@ if [ -f "$FOLDER_PATH/venv/bin/activate" ]; then
   pip3 install zss
   pip3 install matplotlib
   pip3 install igraph
-  pip3 install plotly
+  pip3 install networkx
+  pip3 install reportlab
 else
   # Make the venv, then continue
   python3 -m venv "$FOLDER_PATH/venv"
@@ -22,5 +23,6 @@ else
   pip3 install zss
   pip3 install matplotlib
   pip3 install igraph
-  pip3 install plotly
+  pip3 install networkx
+  pip3 install reportlab
 fi
