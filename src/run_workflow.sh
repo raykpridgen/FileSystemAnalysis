@@ -53,10 +53,8 @@ fi
 
 ORIGINAL_TREE_NAME="original_tree"
 MODIFIED_TREE_BASE_NAME="modified_tree"
+ITERATIONS=$param
 
-mkdir -p ../data
-mkdir -p ../metrics
-mkdir -p ../plots
 
 # Generate random parameters for trees.py
 # Depth and Degree
@@ -67,7 +65,7 @@ TREES_MAX_DEPTH=$(( 10 ))
 # Max new files (0 - 3)
 MAX_NEW_FILES=$(( 20 ))
 
-# Hardcode iterations for testing purposes
+
 
 
 # Define GUFI index names
@@ -81,6 +79,8 @@ echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
 
 shopt -s nullglob
 rm ../report/images/*.png
+rm -rf ../data && mkdir ../data
+sleep 1
 echo "Cleared data"
 > ../report/data/metrics.txt
 
@@ -263,7 +263,7 @@ echo "Tree comparison time: $comparisonTime seconds"
 # --- 3. Optional Plot Display (uncomment to enable) ---
 # To automatically display a plot with the metrics data generated, uncomment the lines below.
 echo ""
-python3 plot_metrics.py "$2"
+python3 plot_metrics.py ../report/data/metrics.txt
 
 
 
@@ -273,28 +273,28 @@ python3 plot_metrics.py "$2"
 
 # Sleep command for consistency of deletion
 # Fast program completion may result in leftover files/directories otherwise
-echo ""
-echo "Tree deletion in progress, please wait..."
-sleep 3
+#echo ""
+#echo "Tree deletion in progress, please wait..."
+#sleep 3
 
-if [ "$ITERATIONS" -gt 1 ]; then
-    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
-    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
-
-    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
-    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
-
-    for ((i=1; i<ITERATIONS; i++)); do
-        rm -rf "../data/${MODIFIED_TREE_BASE_NAME}$i"
-        rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
-    done
-else
-    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
-    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
-
-    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
-    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
-fi
+#if [ "$ITERATIONS" -gt 1 ]; then
+#    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
+#    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
+#
+#    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
+#    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+#
+#    for ((i=1; i<ITERATIONS; i++)); do
+#        rm -rf "../data/${MODIFIED_TREE_BASE_NAME}$i"
+#        rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
+#    done
+#else
+#    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
+#    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
+#
+#    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
+#   rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+#fi
 
 echo "Tree deletion complete"
 
