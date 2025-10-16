@@ -15,6 +15,8 @@ if [ -z "$param" ]; then
     echo ""
     echo "To execute this program, run:"
     echo "    $0 <iterations>"
+    echo "Or, to clean data:"
+    echo "    $0 clean"
     echo ""
     echo "Applicable python files that execute an operation in this script include:"
     echo ""
@@ -37,7 +39,15 @@ if [ -z "$param" ]; then
     echo "For more specific information on a particular script, see the usage statement by running: "
     echo "    python3 <script>"
     echo ""
-    exit 1
+    exit 0
+
+elif [ "$param" == "clean" ]; then
+    shopt -s nullglob
+    rm ../report/images/*.png
+    > ../report/data/metrics.txt
+    rm ../report/final_report.pdf
+    echo "Cleared data"
+    exit 0
 fi
 # --- 1. Define filenames and parameters ---
 
