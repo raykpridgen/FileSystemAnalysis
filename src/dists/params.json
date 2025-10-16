@@ -118,13 +118,13 @@
             "root" : -1
         },
         "user_mode": {
-            "createFile" : 0.4, 
-            "createFolder" : 0.4,
+            "createFile" : 0.5, 
+            "createFolder" : 0.5,
             "editFile" : 0.3, 
-            "deleteFolder" : 0.05,
-            "deleteFile" : 0.1,
+            "deleteFolder" : 0.03,
+            "deleteFile" : 0.4,
             "createDepth" : 3,
-            "root" : 3
+            "root" : 5
         }  
     },
 

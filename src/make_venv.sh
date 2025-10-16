@@ -7,6 +7,8 @@ FOLDER_PATH="$(cd "$SCRIPT_DIR/../.." && pwd)"
 #echo "$SCRIPT_DIR"
 #echo "$FOLDER_PATH"
 
+mkdir ../data ../report/data ../report/images
+
 # If the actualy activate file exists
 if [ -f "$FOLDER_PATH/venv/bin/activate" ]; then
   # Activate venv and install dependencies
@@ -14,7 +16,8 @@ if [ -f "$FOLDER_PATH/venv/bin/activate" ]; then
   pip3 install zss
   pip3 install matplotlib
   pip3 install igraph
-  pip3 install plotly
+  pip3 install networkx
+  pip3 install reportlab
 else
   # Make the venv, then continue
   python3 -m venv "$FOLDER_PATH/venv"
@@ -22,5 +25,6 @@ else
   pip3 install zss
   pip3 install matplotlib
   pip3 install igraph
-  pip3 install plotly
+  pip3 install networkx
+  pip3 install reportlab
 fi

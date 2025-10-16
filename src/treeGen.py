@@ -7,35 +7,17 @@ import sys
 import random
 import time
 import json
+from utils import getTimeInMs, parse_dist_params
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
 SAVE_TO_DIR = "../data/"
 
-def parse_dist_params(degree_mode="low_degree", filetype_mode="default", file_ext_mode="default", permissions_mode="default", size_mode="default"):
-    
-    # Load JSON from file
-    with open("dists/params.json", 'r') as f:
-        params = json.load(f)
-
-    # Degree
-    degree_distr = {int(k): v for k, v in params["degree"][degree_mode].items()}
-    # File type
-    fileType_distr = {k: v for k, v in params["type"][filetype_mode].items()}
-    # Extensions
-    fileExt_distr = {k: v for k, v in params["filetypes"][file_ext_mode].items()}
-    # Permissions
-    permissions_distr = {int(k, 8): v for k, v in params["permissions"][permissions_mode].items()}
-    # Sizes
-    size_distr = {k: v for k, v in params["size"][size_mode].items()}
-
-    return degree_distr, fileType_distr, fileExt_distr, permissions_distr, size_distr
-
 # Clean up previous run with same name
 def clean_tree(rootName):
         # If root name already exists
         if os.path.exists(rootName):
-            
+            startTimeClean = time.perf_counter()
             # If it is a file, remove
             if os.path.isfile(rootName):
                 os.remove(rootName)
@@ -43,6 +25,8 @@ def clean_tree(rootName):
             # If name is a dir
             elif os.path.isdir(rootName):
                 shutil.rmtree(rootName)
+            endTimeClean = time.perf_counter()
+            print(f"Removed tree at '{rootName}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
 
 class ArtificialTree:
     def __init__(self, rootName, depthRange, degreeDist, sizeDist, timeRange, fileDist, fileExtensions, modeDist, users=1, groups=1):
@@ -149,10 +133,17 @@ class ArtificialTree:
     def generate_tree(self):
         # Create root dir
         root = Path(self.rootName)
+        # remove old root if same name exists
         clean_tree(root)
+
+        startGenTime = time.perf_counter()
+        
         root.mkdir(parents=True, exist_ok=True)
         os.chmod(root, 0o755)
         self.gen_tree_atlevel(0, root)
+
+        endGenTime = time.perf_counter()
+        print(f"Generated tree '{str(newTree.rootName)[8:]}' in {getTimeInMs(startGenTime, endGenTime)} ms.")
 
     # Generate at a level, utilize recursion
     def gen_tree_atlevel(self, depth, root, max_files=-1):
@@ -282,21 +273,31 @@ Remove tree(s):
 
     # Handle CLEAN operation
     if args[0] == "clean":
-        if len(args) < 3:
+        if len(args) < 2:
             print("Usage: python3 treeGen.py clean <root_name> <num_remove>")
             sys.exit(1)
-
-        root, num = args[1], int(args[2])
-
-        if num == 0:
+        
+        elif len(args) == 2:
+            root = args[1]
             clean_tree(f"{SAVE_TO_DIR}{root}")
-            print(f"Removed tree at {SAVE_TO_DIR}{root}")
-        else:
-            for i in range(num):
-                clean_tree(f"{SAVE_TO_DIR}{root}{i}")
-                print(f"Removed tree at {SAVE_TO_DIR}{root}{i}")
+            sys.exit(0)
 
-        sys.exit(0)
+        else:
+            root, num = args[1], int(args[2])
+
+            for i in range(-1, num):
+                if i == -1:
+                    startTimeClean = time.perf_counter()
+                    clean_tree(f"{SAVE_TO_DIR}{root}")
+                    endTimeClean = time.perf_counter()
+                    print(f"Removed tree at '{root}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
+                else:
+                    startTimeClean = time.perf_counter()
+                    clean_tree(f"{SAVE_TO_DIR}{root}{i}")
+                    endTimeClean = time.perf_counter()
+                    print(f"Removed tree at '{root}{i}' in {getTimeInMs(startTimeClean, endTimeClean)} ms")
+            
+            sys.exit(0)
 
     # Handle GENERATION
     if len(args) < 3:

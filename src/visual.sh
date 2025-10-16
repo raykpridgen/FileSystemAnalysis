@@ -23,34 +23,34 @@ open_browser() {
 }
 
 PULL_FROM_PATH="../data"
-SAVE_TO_PATH="../plots" 
+SAVE_TO_PATH="../report/images" 
 
 if [ "$1" == "clean" ]; then
     shopt -s nullglob
-    rm "$SAVE_TO_PATH"/*.html
+    rm "$SAVE_TO_PATH"/*.png
     echo "Cleared plots folder."
     exit 0
 
 elif [ "$1" == "view" ]; then
-    FILE_NAME="$SAVE_TO_PATH/$2.html"
-    echo "Viewing: $2.html"
+    FILE_NAME="$SAVE_TO_PATH/$2"
+    echo "Viewing: $2"
     open_browser "$FILE_NAME"
 
 elif [ "$1" == "visual" ]; then
     
     ROOT="$PULL_FROM_PATH/$2"
-    FILE_NAME="$SAVE_TO_PATH/$3.html"
+    FILE_NAME="$SAVE_TO_PATH/$3"
     python3 visualize.py "visual" "$ROOT" "$FILE_NAME"
     open_browser "$FILE_NAME"
-    echo "Viewing: $3.html"
+    echo "Generated png: $3"
 
 elif [ "$1" == "compare" ]; then
     ROOT_A="$PULL_FROM_PATH/$2"
     ROOT_B="$PULL_FROM_PATH/$3"
-    FILE_NAME="$SAVE_TO_PATH/$4.html"
+    FILE_NAME="$SAVE_TO_PATH/$4"
     python3 visualize.py "compare" "$ROOT_A" "$ROOT_B" "$FILE_NAME"
     open_browser "$FILE_NAME"
-    echo "Viewing: $2.html"
+    echo "Generated png: $4"
 
 else
     echo ""

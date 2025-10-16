@@ -8,6 +8,17 @@
 ## Install dependencies
 `./make_venv.sh`
 
+## Activate venv
+
+`source ../../venv/bin/activate`
+
+
+# Quick start
+## Run this to utilize pre-built workflow
+`./run_workflow.sh 10`
+
+- A report will be generated in /reports
+
 # Generating Filesystem Trees
 treeGen.py is the script used to generate trees, located in the /src folder. This will generate a psuedorandom file tree using probabilities in JSON and input parameters. Commandline arguments are as follows:
 

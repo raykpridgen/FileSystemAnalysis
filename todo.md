@@ -51,3 +51,24 @@ GUFI:
 # 10/7 Meeting
 ## Speed up compare_trees
 ## Add changes output from modify.py
+
+# 10/14 - Script to centralize everythin
+## Folder
+### Images
+- metrics
+- tree visuals
+### Data
+- Indexes of trees
+- Metrics for each tree diff
+- Timings
+- Authentication
+### PDF Plot - Python
+- arguments
+- tree metrics
+- GUFI functions
+- Visualizations
+- Graphs
+- Timing
+
+## Future - C Migration
+### RAG / ML Usage with GUFI

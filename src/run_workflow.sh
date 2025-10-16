@@ -5,26 +5,50 @@
 # =================================================================
 
 
-# Determining if valid command line arguments were passed in
-if [ "$#" -eq 0 ]; then
-    ITERATIONS=1
-    RUN_NUMBER=1
-elif [ "$#" -eq 1 ] && [[ "$1" =~ ^[0-9]+$ ]]; then
-    ITERATIONS=$1
-    RUN_NUMBER=1
-#Checking if there is a valid run number passed in
-elif [ "$#" -eq 2 ] && [[ "$1" =~ ^[0-9]+$ ]] && [[ "$2" =~ ^[0-9]+$ ]]; then
-    ITERATIONS=$1
-    RUN_NUMBER=$2
-else
-  echo "Usage: $0 [iterations] [run_number]"
-  echo "     iterations (integer) - determines how many tree modifications take place"
-  echo "     run_number (integer) - is used to number the output files for subsequent runs"
-  echo "     Both values default to 1 with no input"
-  exit 1 # Exit with an error code
+param=$1
+
+if [ -z "$param" ]; then
+    echo ""
+    echo ""
+    echo "This program automates usage for all major executions in this project, found in the src folder."
+    echo " -- Usage is expected for generating, modifying, plotting, and generating a report for a filesystem tree."
+    echo ""
+    echo "To execute this program, run:"
+    echo "    $0 <iterations>"
+    echo "Or, to clean data:"
+    echo "    $0 clean"
+    echo ""
+    echo "Applicable python files that execute an operation in this script include:"
+    echo ""
+    echo "-- treeGen.py"
+    echo "    Generates an artificial filesystem tree from many parameters that determine behavior."
+    echo ""
+    echo "-- modify.py"
+    echo "    Modifies an artificial filesystem tree with random operations over given iterations."
+    echo ""
+    echo "-- visualize.py"
+    echo "    Plots a visual graph representation of the tree generated, highlighting changes over iterations."
+    echo ""
+    echo "-- compare_trees.py"
+    echo "    Computes useful metrics for the nature of the filesystem tree and it's changes over iterations."
+    echo ""
+    echo "-- report_generator.py"
+    echo "    Generates a PDF report of all data generated, computed, and analyzed in this script."
+    echo ""
+    echo ""
+    echo "For more specific information on a particular script, see the usage statement by running: "
+    echo "    python3 <script>"
+    echo ""
+    exit 0
+
+elif [ "$param" == "clean" ]; then
+    shopt -s nullglob
+    rm ../report/images/*.png
+    > ../report/data/metrics.txt
+    rm ../report/final_report.pdf
+    echo "Cleared data"
+    exit 0
 fi
-
-
 # --- 1. Define filenames and parameters ---
 
 ORIGINAL_TREE_NAME="original_tree"
@@ -36,8 +60,8 @@ mkdir -p ../plots
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_MIN_DEPTH=$(( 10 ))
-TREES_MAX_DEPTH=$(( 20 ))
+TREES_MIN_DEPTH=$(( 5 ))
+TREES_MAX_DEPTH=$(( 10 ))
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
@@ -50,15 +74,16 @@ MAX_NEW_FILES=$(( 20 ))
 GUFI_ORIGINAL_INDEX="gufi_index_${ORIGINAL_TREE_NAME}"
 GUFI_MODIFIED_INDEX_BASE_NAME="gufi_index_${MODIFIED_TREE_BASE_NAME}"
 
-
-
-
-
-
 # --- 2. Execute the workflow ---
 echo "--- Starting File Tree Comparison Workflow ---"
 echo "Creating initial tree: ${ORIGINAL_TREE_NAME}"
 echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
+
+shopt -s nullglob
+rm ../report/images/*.png
+echo "Cleared data"
+> ../report/data/metrics.txt
+
 
 beforeTreeGen=${SECONDS}
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
@@ -80,6 +105,10 @@ modTreeTime=$((SECONDS-beforeModTree))
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
 
+echo "Visualizing tree development between ${ORIGINAL_TREE_NAME} and ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
+python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))" "${ORIGINAL_TREE_NAME}_plot.png"
+echo "${ORIGINAL_TREE_NAME}_plot.png saved"
+echo ""
 sleep 2
 
 echo "Creating GUFI indexes..."
@@ -127,10 +156,10 @@ if [ "$ITERATIONS" -gt 1 ]; then
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
+        echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -160,11 +189,11 @@ if [ "$ITERATIONS" -gt 1 ]; then
         #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
         if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
-            echo "${FS_Metrics[@]}" >> ../metrics/metrics${RUN_NUMBER}.txt
+            echo "${FS_Metrics[@]}" >> ../report/data/metrics.txt
         else
             echo ""
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : DOES NOT MATCH"
-            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> ../metrics/metrics${RUN_NUMBER}.txt
+            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> ../report/data/metrics.txt
             for ((j=0; j<${#FS_Metrics[@]}; j++)); do
                 if [ "${FS_Metrics[j]}" != "${GUFI_Metrics[j]}" ]; then
                     if [ "$j" -eq 0 ]; then
@@ -200,10 +229,10 @@ else
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
+        echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../metrics/metrics${RUN_NUMBER}.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -268,3 +297,10 @@ else
 fi
 
 echo "Tree deletion complete"
+
+echo "Generating visuals..."
+PULL_FROM_PATH="../data"
+SAVE_TO_PATH="../report/images" 
+
+echo Generating report...
+python3 ../report/report_generator.py
