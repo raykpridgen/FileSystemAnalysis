@@ -4,7 +4,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
 # Paths
-BASE_DIR = "."
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 IMG_DIR = os.path.join(BASE_DIR, "images")
 OUTPUT_PDF = os.path.join(BASE_DIR, "final_report.pdf")
@@ -12,6 +12,15 @@ OUTPUT_PDF = os.path.join(BASE_DIR, "final_report.pdf")
 # Create document
 doc = SimpleDocTemplate(OUTPUT_PDF)
 styles = getSampleStyleSheet()
+styles['Title'].fontName = 'Times-Bold'
+styles['Title'].fontSize = 18
+
+styles['Heading2'].fontName = 'Times-Roman'
+styles['Heading2'].fontSize = 14
+
+styles['BodyText'].fontName = 'Times-Roman'
+styles['BodyText'].fontSize = 11
+
 story = []
 
 # --- Title ---
@@ -40,16 +49,35 @@ for filename in sorted(os.listdir(IMG_DIR)):
 
 # --- Optional: Add a table example ---
 data_table = [
-    ["Metric", "Value"],
-    ["Accuracy", "92.4%"],
-    ["Loss", "0.13"],
-    ["Epochs", "50"],
+    ["Iteration", "Tree Edit Distance", "Files Added", "Change in Depth"],
 ]
+
+iters = 1
+for filename in sorted(os.listdir(DATA_DIR)):
+    if filename.endswith('metrics.txt'):
+        file_path = os.path.join(DATA_DIR, filename)
+
+        with open(file_path, 'r') as f:
+            for line in f:
+                parts = line.strip().split()
+                
+                if len(parts) >= 3:
+                    distance = parts[0]
+                    files_added = parts[1]
+                    depth_change = parts[2]
+
+                    data_table.append([iters, distance, files_added, depth_change])
+                else:
+                    print(f"Skipping file {filename}: not enough values")
+                iters += 1
+        
+
+
 table = Table(data_table)
 table.setStyle(TableStyle([
     ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
     ('GRID', (0,0), (-1,-1), 1, colors.black),
-    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold')
+    ('FONTNAME', (0,0), (-1,0), 'Times-Roman')
 ]))
 story.append(Paragraph("<b>Summary Table</b>", styles['Heading2']))
 story.append(table)

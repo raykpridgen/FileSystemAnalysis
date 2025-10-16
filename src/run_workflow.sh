@@ -11,12 +11,12 @@ MODIFIED_TREE_BASE_NAME="modified_tree"
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_MIN_DEPTH=$(( 10 ))
-TREES_MAX_DEPTH=$(( 20 ))
+TREES_MIN_DEPTH=$(( 5 ))
+TREES_MAX_DEPTH=$(( 10 ))
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
-MAX_NEW_FILES=$(( 50 ))
+MAX_NEW_FILES=$(( 20 ))
 
 # Hardcode iterations for testing purposes
 ITERATIONS=$1
@@ -34,6 +34,7 @@ GUFI_MODIFIED_INDEX_BASE_NAME="gufi_index_${MODIFIED_TREE_BASE_NAME}"
 echo "--- Starting File Tree Comparison Workflow ---"
 echo "Creating initial tree: ${ORIGINAL_TREE_NAME}"
 echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
+> ../report/data/metrics.txt
 
 beforeTreeGen=${SECONDS}
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
@@ -102,10 +103,10 @@ if [ "$ITERATIONS" -gt 1 ]; then
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > metrics.txt
+        echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > metrics.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -135,11 +136,11 @@ if [ "$ITERATIONS" -gt 1 ]; then
         #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
         if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
-            echo "${FS_Metrics[@]}" >> metrics.txt
+            echo "${FS_Metrics[@]}" >> ../report/data/metrics.txt
         else
             echo ""
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : DOES NOT MATCH"
-            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> metrics.txt
+            echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" >> ../report/data/metrics.txt
             for ((j=0; j<${#FS_Metrics[@]}; j++)); do
                 if [ "${FS_Metrics[j]}" != "${GUFI_Metrics[j]}" ]; then
                     if [ "$j" -eq 0 ]; then
@@ -175,10 +176,10 @@ else
     #Metrics data that do not match have ERROR appended and both values (FS and GUFI data) are sent to "metrics.txt"
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
-        echo "${FS_Metrics[@]}" > metrics.txt
+        echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
-        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > metrics.txt
+        echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
         for ((i=0; i<${#FS_Metrics[@]}; i++)); do
             if [ "${FS_Metrics[i]}" != "${GUFI_Metrics[i]}" ]; then
                 if [ "$i" -eq 0 ]; then
@@ -243,3 +244,7 @@ else
 fi
 
 echo "Tree deletion complete"
+
+
+echo Generating report...
+python3 ../report/report_generator.py
