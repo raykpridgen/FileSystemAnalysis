@@ -54,6 +54,10 @@ fi
 ORIGINAL_TREE_NAME="original_tree"
 MODIFIED_TREE_BASE_NAME="modified_tree"
 
+mkdir -p ../data
+mkdir -p ../metrics
+mkdir -p ../plots
+
 # Generate random parameters for trees.py
 # Depth and Degree
 TREES_MIN_DEPTH=$(( 5 ))
@@ -64,7 +68,7 @@ TREES_MAX_DEPTH=$(( 10 ))
 MAX_NEW_FILES=$(( 20 ))
 
 # Hardcode iterations for testing purposes
-ITERATIONS=$1
+
 
 # Define GUFI index names
 GUFI_ORIGINAL_INDEX="gufi_index_${ORIGINAL_TREE_NAME}"
@@ -121,7 +125,7 @@ if [ "$ITERATIONS" -gt 1 ]; then
         echo ""
     done
 else
-    gufi_dir2index "$../data/{MODIFIED_TREE_BASE_NAME}0" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
+    gufi_dir2index "../data/${MODIFIED_TREE_BASE_NAME}0" "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
     echo "GUFI index creation complete."
     echo ""
 fi
@@ -258,8 +262,8 @@ echo "Tree comparison time: $comparisonTime seconds"
 
 # --- 3. Optional Plot Display (uncomment to enable) ---
 # To automatically display a plot with the metrics data generated, uncomment the lines below.
-#echo ""
-#python3 plot_metrics.py
+echo ""
+python3 plot_metrics.py "$2"
 
 
 
