@@ -40,6 +40,8 @@ for data in content:
     i+=1
     
 
+if len(TED) < 2:
+    sys.exit()
 
 TED_stdev = s.stdev(TED)
 treeHeightChange_stdev = s.stdev(treeHeightChange)
