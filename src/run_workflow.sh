@@ -263,10 +263,10 @@ echo ""
 echo "--- Workflow Complete ---"
 echo "   - Timing breakdown -  "
 echo ""
-echo "Tree creation time: $treeGenTime seconds"
-echo "Tree modification time: $modTreeTime seconds"
-echo "GUFI index creation time: $GUFIcreateTime seconds"
-echo "Tree comparison time: $comparisonTime seconds"
+echo "Tree creation time: $treeGenTime seconds" | tee ../report/data/timing.txt
+echo "Tree modification time: $modTreeTime seconds" | tee -a ../report/data/timing.txt
+echo "GUFI index creation time: $GUFIcreateTime seconds" | tee -a ../report/data/timing.txt
+echo "Tree comparison time: $comparisonTime seconds" | tee -a ../report/data/timing.txt
 
 echo ""
 echo "Generating visuals..."
