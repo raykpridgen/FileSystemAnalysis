@@ -105,10 +105,10 @@ modTreeTime=$((SECONDS-beforeModTree))
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
 
-echo "Visualizing tree development between ${ORIGINAL_TREE_NAME} and ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
-python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))" "${ORIGINAL_TREE_NAME}_plot.png"
-echo "${ORIGINAL_TREE_NAME}_plot.png saved"
-echo ""
+#echo "Visualizing tree development between ${ORIGINAL_TREE_NAME} and ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
+#python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))" "${ORIGINAL_TREE_NAME}_plot.png"
+#echo "${ORIGINAL_TREE_NAME}_plot.png saved"
+#echo ""
 sleep 2
 
 echo "Creating GUFI indexes..."
@@ -157,6 +157,8 @@ if [ "$ITERATIONS" -gt 1 ]; then
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
         echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
+        
+        python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" 1:"${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}0.png"
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
         echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
@@ -190,6 +192,9 @@ if [ "$ITERATIONS" -gt 1 ]; then
         if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
             echo "${FS_Metrics[@]}" >> ../report/data/metrics.txt
+
+            python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}$((i-1))" "${MODIFIED_TREE_BASE_NAME}$i" "$((i+1)):${MODIFIED_TREE_BASE_NAME}$((i-1))-to-${MODIFIED_TREE_BASE_NAME}$i.png"
+
         else
             echo ""
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : DOES NOT MATCH"
@@ -230,6 +235,9 @@ else
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
         echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
+
+        python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" "1:${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}0.png"
+
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
         echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
@@ -260,45 +268,9 @@ echo "Tree modification time: $modTreeTime seconds"
 echo "GUFI index creation time: $GUFIcreateTime seconds"
 echo "Tree comparison time: $comparisonTime seconds"
 
-# --- 3. Optional Plot Display (uncomment to enable) ---
-# To automatically display a plot with the metrics data generated, uncomment the lines below.
 echo ""
-python3 plot_metrics.py ../report/data/metrics.txt
-
-
-
-
-# --- 4. Optional Cleanup (uncomment to enable) ---
-# To remove the generated directories and indexes, uncomment the lines below.
-
-# Sleep command for consistency of deletion
-# Fast program completion may result in leftover files/directories otherwise
-#echo ""
-#echo "Tree deletion in progress, please wait..."
-#sleep 3
-
-#if [ "$ITERATIONS" -gt 1 ]; then
-#    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
-#    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
-#
-#    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
-#    rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
-#
-#    for ((i=1; i<ITERATIONS; i++)); do
-#        rm -rf "../data/${MODIFIED_TREE_BASE_NAME}$i"
-#        rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}$i"
-#    done
-#else
-#    rm -rf "../data/${ORIGINAL_TREE_NAME}" 
-#    rm -rf "../data/${MODIFIED_TREE_BASE_NAME}0"
-#
-#    rm -rf "../data/${GUFI_ORIGINAL_INDEX}" 
-#   rm -rf "../data/${GUFI_MODIFIED_INDEX_BASE_NAME}0"
-#fi
-
-echo "Tree deletion complete"
-
 echo "Generating visuals..."
+python3 plot_metrics.py ../report/data/metrics.txt
 PULL_FROM_PATH="../data"
 SAVE_TO_PATH="../report/images" 
 
