@@ -159,7 +159,6 @@ if [ "$ITERATIONS" -gt 1 ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
         echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
         
-        python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" 1:"${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}0.png"
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
         echo "ERROR: FS = ${FS_Metrics[@]}  GUFI = ${GUFI_Metrics[@]}" > ../report/data/metrics.txt
@@ -194,8 +193,6 @@ if [ "$ITERATIONS" -gt 1 ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
             echo "${FS_Metrics[@]}" >> ../report/data/metrics.txt
 
-            python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}$((i-1))" "${MODIFIED_TREE_BASE_NAME}$i" "$((i+1)):${MODIFIED_TREE_BASE_NAME}$((i-1))-to-${MODIFIED_TREE_BASE_NAME}$i.png"
-
         else
             echo ""
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : DOES NOT MATCH"
@@ -215,8 +212,14 @@ if [ "$ITERATIONS" -gt 1 ]; then
             done
             echo ""
         fi
-
     done
+
+    half=$(( (ITERATIONS + 1) / 2 ))  # integer division
+    last=$((ITERATIONS - 1))
+    python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}${half}" first:"${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}${half}.png"
+
+    python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}${half}" "${MODIFIED_TREE_BASE_NAME}${last}" "last:${MODIFIED_TREE_BASE_NAME}${half}-to-${MODIFIED_TREE_BASE_NAME}${last}.png"
+
 else
     echo "Comparing tree metrics and whether real file system comparisons match GUFI comparisons..."
     echo ""
