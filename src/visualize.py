@@ -14,8 +14,12 @@ class TreeVisualizer:
             print(f"Root path does not exist: {pullPath + rootA}")
             raise FileNotFoundError(f"Error")
         
+        # Handle parent script sending blank output for file save name
+        if fileSavePath == "":
+            fileSavePath = rootA + "_plot"
+
         # Assign paths and build adjacency representation
-        self.fileSavePath = savePath + fileSavePath
+        self.fileSavePath = savePath + fileSavePath + ".png"
         self.rootA = Path(pullPath + rootA).resolve()
         self.timing = timing
 
@@ -108,9 +112,9 @@ class TreeVisualizer:
         nx.draw_networkx_nodes(
             G, pos,
             node_color=node_colors,
-            node_size=300,
+            node_size=100,
             edgecolors="darkslategray",
-            linewidths=1
+            linewidths=1,
         )
 
         ys = [y for x, y in pos.values()]
@@ -119,6 +123,7 @@ class TreeVisualizer:
         labels = {node: Path(node).name for node in G.nodes()}
         label_positions = {node: (x, y + offset) for node, (x, y) in pos.items()}
 
+        '''
         nx.draw_networkx_labels(
             G,
             label_positions,
@@ -132,6 +137,7 @@ class TreeVisualizer:
                 alpha=0.9                   # transparency
             )
         )
+        '''
         plt.axis("off")
         plt.title("Directory Tree")
 
@@ -212,7 +218,8 @@ class TreeVisualizer:
             pos,
             node_color=node_colors,
             edgecolors="darkslategray",
-            linewidths=1
+            linewidths=0.3,
+            node_size=100
         )
 
         ys = [y for x, y in pos.values()]
@@ -221,6 +228,7 @@ class TreeVisualizer:
         labels = {node: Path(node).name for node in G.nodes()}
         label_positions = {node: (x, y + offset) for node, (x, y) in pos.items()}
 
+        '''
         nx.draw_networkx_labels(
             G,
             label_positions,
@@ -234,6 +242,7 @@ class TreeVisualizer:
                 alpha=0.9                   # transparency
             )
         )
+        '''
 
         plt.axis("off")
         plt.title("Directory Tree")
