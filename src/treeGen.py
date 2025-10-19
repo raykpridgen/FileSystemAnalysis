@@ -12,7 +12,8 @@ from utils import getTimeInMs, parse_dist_params
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
 SAVE_TO_DIR = "../data/"
-METRICS_OUT = "../report/data/"
+METRICS_OUT = "../report/data/parameters.txt"
+
 # Clean up previous run with same name
 def clean_tree(rootName):
         # If root name already exists
@@ -309,10 +310,51 @@ Remove tree(s):
     timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
 
 
-    degree_type = "low_degree"
+    degree_mode = "low_degree"
+    type_mode = "default"
+    ext_mode = "default"
+    perm_mode = "default"
+    size_mode = "default"
+    
+    degree_distr, file_type_distr, file_ext_distr, permissions_distr, size_distr = parse_dist_params(
+        degree_mode=degree_mode, 
+        filetype_mode=type_mode,
+        file_ext_mode=ext_mode,
+        permissions_mode=perm_mode,
+        size_mode=size_mode
+        )
 
-    degree_distr, file_type_distr, file_ext_distr, permissions_distr, size_distr = parse_dist_params(degree_mode=degree_type)
+    with open(METRICS_OUT, 'w') as file:
+        # Degree parameters
+        file.write("Degree Distribution: " + degree_mode + "\n")
+        for key, value in degree_distr.items():
+            file.write(f"{key}: {value}\n")
+        file.write("\n")
 
+        # File Type distribution parameters
+        file.write("File Type Distribution: " + type_mode + "\n")
+        for key, value in file_type_distr.items():
+            file.write(f"{key}: {value}\n")
+        file.write("\n")
+
+        # Ext parameters
+        file.write("Fiel Extension Distribution: " + ext_mode + "\n")
+        for key, value in file_ext_distr.items():
+            file.write(f"{key}: {value}\n")
+        file.write("\n")
+
+        # Permission parameters
+        file.write("Permissions Distribution: " + perm_mode + "\n")
+        for key, value in permissions_distr.items():
+            file.write(f"{key}: {value}\n")
+        file.write("\n")
+
+        # Degree parameters
+        file.write("File Size Distribution: " + size_mode + "\n")
+        for key, value in size_distr.items():
+            file.write(f"{key}: {value}\n")
+        file.write("\n")
+                
 
     newTree = ArtificialTree(rootName, depthRange, degree_distr, size_distr, timeRange, file_type_distr, file_ext_distr, permissions_distr)
     newTree.generate_tree()

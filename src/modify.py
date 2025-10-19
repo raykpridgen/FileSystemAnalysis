@@ -10,6 +10,7 @@ import time
 from treeGen import ArtificialTree
 from utils import getTimeInMs, parse_dist_params, parse_edit_params
 SAVE_TO_DIR = "../data/"
+METRICS_OUT = "../report/data/parameters.txt"
 
 class ModifyTree:
     def __init__(self, originalRoot, newRoot, maxNew, iterations):
@@ -23,9 +24,21 @@ class ModifyTree:
         self.userMode = True
         # Dict of edit probabilities
         if (self.userMode):
-            self.editProbs = parse_edit_params("user_mode")
+            mod_mode = "user_mode"
+            self.editProbs = parse_edit_params(edit_mode=mod_mode)
         else:
-            self.editProbs = parse_edit_params()
+            mod_mode = "default"
+            self.editProbs = parse_edit_params(edit_mode=mod_mode)
+
+        # Send to output files
+            
+        with open(METRICS_OUT, 'a') as file:
+            # Degree parameters
+            file.write("Modification Distribution: " + mod_mode + "\n")
+            for key, value in self.editProbs.items():
+                file.write(f"{key}: {value}\n")
+            file.write("\n")
+
         # Level of user home dirs
         self.userHome = self.editProbs["root"]
         print(self.userHome)
