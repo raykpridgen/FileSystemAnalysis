@@ -17,6 +17,7 @@ if [ -f "$FOLDER_PATH/venv/bin/activate" ]; then
   pip3 install matplotlib
   pip3 install igraph
   pip3 install networkx
+  pip3 install pygraphviz
   pip3 install reportlab
 else
   # Make the venv, then continue
@@ -26,5 +27,6 @@ else
   pip3 install matplotlib
   pip3 install igraph
   pip3 install networkx
+  pip3 install pygraphviz
   pip3 install reportlab
 fi
