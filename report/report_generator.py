@@ -1,166 +1,264 @@
 import os
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Spacer, Table, TableStyle, KeepTogether
-from reportlab.lib.styles import getSampleStyleSheet
+import glob
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
-# Paths
+# Directory setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 IMG_DIR = os.path.join(BASE_DIR, "images")
 OUTPUT_PDF = os.path.join(BASE_DIR, "final_report.pdf")
 
-# Create document
-doc = SimpleDocTemplate(OUTPUT_PDF, pagesize=letter)
-styles = getSampleStyleSheet()
 
-# --- Style Definitions ---
-styles['Title'].fontName = 'Times-Bold'
-styles['Title'].fontSize = 18
-styles['Title'].borderPadding = (0, 0, 0, 0)
-
-styles['Heading2'].fontName = 'Times-Roman'
-styles['Heading2'].fontSize = 14
-
-styles['BodyText'].fontName = 'Times-Roman'
-styles['BodyText'].fontSize = 11
-
-story = []
-
-# --- Pre-load and Parse Metrics Data ---
-parsed_metrics = []
-METRICS_FILE = os.path.join(DATA_DIR, 'metrics.txt')
-
-if os.path.exists(METRICS_FILE):
-    with open(METRICS_FILE, 'r') as f:
+def parse_parameters(filepath):
+    """Parse parameters.txt and return structured data"""
+    sections = []
+    current_section = None
+    
+    with open(filepath, 'r') as f:
         for line in f:
-            parts = line.strip().split()
-            if len(parts) >= 3:
-                parsed_metrics.append(parts)
-else:
-    print(f"Metrics file not found: {METRICS_FILE}")
-
-# --- Title Section ---
-story.append(Paragraph("FileSystem Analysis", styles['Title']))
-# Horizontal Line using an empty table
-title_line_table = Table([['']], colWidths=[doc.width])
-title_line_table.setStyle(TableStyle([
-    ('LINEBELOW', (0, 0), (0, 0), 2, colors.darkblue),
-    ('TOPPADDING', (0, 0), (0, 0), 0),
-    ('BOTTOMPADDING', (0, 0), (0, 0), 0),
-]))
-story.append(title_line_table)
-story.append(Spacer(1, 20))
-
-
-# --- Data Section ---
-for filename in sorted(os.listdir(DATA_DIR)):
-    if filename.endswith(".txt"):
-        filepath = os.path.join(DATA_DIR, filename)
-        with open(filepath, "r") as f:
-            lines = f.readlines()
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check if this is a section header (contains ':' but not at start)
+            if ':' in line and not line[0].isdigit():
+                # Save previous section if exists
+                if current_section:
+                    sections.append(current_section)
+                
+                # Start new section
+                parts = line.split(':', 1)
+                current_section = {
+                    'title': parts[0].strip(),
+                    'subtitle': parts[1].strip() if len(parts) > 1 else '',
+                    'data': []
+                }
+            elif current_section and ':' in line:
+                # This is a key-value pair
+                key, value = line.split(':', 1)
+                current_section['data'].append([key.strip(), value.strip()])
         
-        story.append(Paragraph(f"<b>Data from {filename}:</b>", styles['Heading2']))
-        for line in lines:
-            story.append(Paragraph(line.strip(), styles['Normal']))
-        story.append(Spacer(1, 12))
-
-# --- Images Section (Metric Plots First, then Line Graph) ---
-
-# Separating the line_graph file from the tree plot files
-all_image_files = sorted(os.listdir(IMG_DIR))
-tree_plot_files = [f for f in all_image_files if f.lower().endswith((".png", ".jpg", ".jpeg")) and f.lower() != "line_graph.png"]
-line_graph_file = next((f for f in all_image_files if f.lower() == "line_graph.png"), None)
-
-entry = 0 # This index strictly maps to the tree_plot_files list and parsed_metrics
-
-# --- Process Metric Plots (ensures correct metric pairing) ---
-for filename in tree_plot_files:
-    filepath = os.path.join(IMG_DIR, filename)
-    figure_block = []
+        # Add the last section
+        if current_section:
+            sections.append(current_section)
     
-    # Check for corresponding metric data
-    if entry < len(parsed_metrics):
-        
-        figure_block.append(Paragraph(f"<b>Figure: {filename}</b>", styles['Heading2']))
-        figure_block.append(Image(filepath, width=400, height=300))
-        
-        # --- Table Creation ---
-        single_entry_data = [
-            ["Iteration", "Tree Edit Distance", "Files Added", "Change in Depth"],
-            [(entry+1), parsed_metrics[entry][0], parsed_metrics[entry][1], parsed_metrics[entry][2]]
-        ]
-        
-        entryTable = Table(single_entry_data)
-        entryTable.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
-            ('FONTNAME', (0,0), (-1,0), 'Times-Bold')
-        ]))
+    return sections
 
-        figure_block.append(entryTable)
-        # --- End Table Creation ---
-        
-        entry += 1 # Increment index ONLY after successfully pairing data
+def parse_metrics(filepath):
+    """Parse metrics.txt and return structured data"""
+    metrics = []
+    with open(filepath, 'r') as f:
+        for i, line in enumerate(f, 1):
+            values = line.strip().split()
+            if len(values) >= 3:
+                metrics.append([f"Iteration {i}", values[0], values[1], values[2]])
+    return metrics
 
-    else:
-        # Handle case where metric data runs out
-        figure_block.append(Paragraph(f"<b>Figure: {filename}</b>", styles['Heading2']))
-        figure_block.append(Image(filepath, width=400, height=300))
-        figure_block.append(Paragraph("<i>No metric data available for this figure.</i>", styles['Normal']))
+def parse_timing(filepath):
+    """Parse timing.txt and return structured data"""
+    timing = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            if ':' in line:
+                desc, time = line.strip().split(':', 1)
+                timing.append([desc.strip(), time.strip()])
+    return timing
 
-    # Wrap and append the block for the current metric figure
-    story.append(KeepTogether(figure_block))
+def categorize_files():
+    """Iterate through directories and categorize files"""
+    file_data = {
+        'parameters': None,
+        'metrics': None,
+        'timing': None,
+        'line_graph': None,
+        'iteration_images': []
+    }
     
-
-
-# --- Process Line Graph (Must be done separately and after) ---
-if line_graph_file:
-    filepath = os.path.join(IMG_DIR, line_graph_file)
-    figure_block = [] # New block for the line graph
-
-    figure_block.append(Paragraph(f"<b>Figure: {line_graph_file}</b>", styles['Heading2']))
-    figure_block.append(Image(filepath, width=400, height=300))
+    # Process data directory
+    if os.path.exists(DATA_DIR):
+        for filename in os.listdir(DATA_DIR):
+            filepath = os.path.join(DATA_DIR, filename)
+            
+            if not os.path.isfile(filepath):
+                continue
+            
+            # Categorize based on filename
+            if 'parameter' in filename.lower():
+                file_data['parameters'] = filepath
+            elif 'metric' in filename.lower():
+                file_data['metrics'] = filepath
+            elif 'timing' in filename.lower() or 'time' in filename.lower():
+                file_data['timing'] = filepath
     
-    # Wrap and append the block for the line graph
-    story.append(KeepTogether(figure_block))
-    story.append(Spacer(1, 20))
-
-
-# --- Summary Table Section ---
-data_table = [
-    ["Iteration", "Tree Edit Distance", "Files Added", "Change in Depth"],
-]
-
-#Using the parsed metrics to generate the summary table
-iters = 1
-for iteration in parsed_metrics:
-    if len(iteration) == 3:
-        distance = iteration[0]
-        files_added = iteration[1]
-        depth_change = iteration[2]
-
-        data_table.append([iters, distance, files_added, depth_change])
-
-        iters += 1
-        
-        
-table = Table(data_table)
-table.setStyle(TableStyle([
-    # Enhanced Borders to separate the summary table from the sub-tables of each iteration
-    ('BOX', (0, 0), (-1, -1), 2, colors.black),      # Thicker border around the entire table
-    ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey), # Thin grey lines for the inner grid
-    ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black), # Thicker line directly under the header
+    # Process images directory
+    if os.path.exists(IMG_DIR):
+        for filename in os.listdir(IMG_DIR):
+            filepath = os.path.join(IMG_DIR, filename)
+            
+            if not os.path.isfile(filepath):
+                continue
+            
+            # Check if it's an image file
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                # Check if it's the line graph
+                if 'line' in filename.lower() or 'graph' in filename.lower():
+                    file_data['line_graph'] = filepath
+                # Check if it's an iteration image (contains ':' in filename)
+                elif ':' in filename:
+                    # Extract iteration number for sorting
+                    try:
+                        iteration_num = int(filename.split(':')[0])
+                        file_data['iteration_images'].append((iteration_num, filepath))
+                    except ValueError:
+                        # If can't extract iteration number, still add it
+                        file_data['iteration_images'].append((999, filepath))
     
-    # Other Styles
-    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-    ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-    ('FONTNAME', (0,0), (-1,0), 'Times-Bold')
-]))
-story.append(Paragraph("<b>Summary Table</b>", styles['Heading2']))
-story.append(table)
+    # Sort iteration images by iteration number
+    file_data['iteration_images'].sort(key=lambda x: x[0])
+    
+    return file_data
 
-# --- Build PDF ---
-doc.build(story)
-print(f"PDF report generated: {OUTPUT_PDF}")
+def create_pdf_report():
+    """Generate the PDF report"""
+    
+    # Categorize all files
+    file_data = categorize_files()
+    
+    # Create the PDF document
+    doc = SimpleDocTemplate(OUTPUT_PDF, pagesize=letter,
+                           rightMargin=72, leftMargin=72,
+                           topMargin=72, bottomMargin=18)
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = styles['Heading1']
+    heading_style = styles['Heading2']
+    subheading_style = styles['Heading3']
+    
+    # Add main title
+    elements.append(Paragraph("Simulation Report", title_style))
+    elements.append(Spacer(1, 0.3*inch))
+    
+    # ===== PARAMETERS SECTION =====
+    if file_data['parameters']:
+        elements.append(Paragraph("Parameters", heading_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        param_sections = parse_parameters(file_data['parameters'])
+        
+        for section in param_sections:
+            # Add section title and subtitle
+            title_text = section['title']
+            if section['subtitle']:
+                title_text += f" ({section['subtitle']})"
+            elements.append(Paragraph(title_text, subheading_style))
+            elements.append(Spacer(1, 0.1*inch))
+            
+            # Create table for this section
+            if section['data']:
+                table_data = [['Parameter', 'Value']] + section['data']
+                t = Table(table_data, colWidths=[3*inch, 2.5*inch])
+                t.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(t)
+                elements.append(Spacer(1, 0.2*inch))
+    
+    # ===== METRICS SECTION =====
+    if file_data['metrics']:
+        elements.append(Paragraph("Metrics", heading_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        metrics = parse_metrics(file_data['metrics'])
+        if metrics:
+            table_data = [['Iteration', 'Value', 'Change 1', 'Change 2']] + metrics
+            t = Table(table_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightblue),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 0.3*inch))
+    
+    # ===== TIMING SECTION =====
+    if file_data['timing']:
+        elements.append(Paragraph("Timing", heading_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        timing = parse_timing(file_data['timing'])
+        if timing:
+            table_data = [['Description', 'Time']] + timing
+            t = Table(table_data, colWidths=[4*inch, 2*inch])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgreen),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 0.3*inch))
+    
+    # ===== LINE GRAPH =====
+    if file_data['line_graph']:
+        elements.append(PageBreak())
+        elements.append(Paragraph("Overall Trend", heading_style))
+        elements.append(Spacer(1, 0.2*inch))
+        img = Image(file_data['line_graph'], width=6*inch, height=4*inch)
+        elements.append(img)
+        elements.append(Spacer(1, 0.3*inch))
+    
+    # ===== ITERATION IMAGES =====
+    if file_data['iteration_images']:
+        elements.append(PageBreak())
+        elements.append(Paragraph("Iteration Details", heading_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        for iteration_num, img_path in file_data['iteration_images']:
+            # Extract iteration info from filename
+            basename = os.path.basename(img_path)
+            iteration_info = basename.replace('.png', '').replace('.jpg', '').replace('.jpeg', '').replace(':', ' - ')
+            
+            elements.append(Paragraph(f"<b>{iteration_info}</b>", subheading_style))
+            elements.append(Spacer(1, 0.1*inch))
+            
+            # Add image
+            img = Image(img_path, width=4.5*inch, height=3*inch)
+            elements.append(img)
+            elements.append(Spacer(1, 0.2*inch))
+            
+            # Add page break every 2 images to avoid crowding
+            if file_data['iteration_images'].index((iteration_num, img_path)) % 2 == 1:
+                elements.append(PageBreak())
+    
+    # Build PDF
+    doc.build(elements)
+    print(f"PDF report generated: {OUTPUT_PDF}")
+
+if __name__ == "__main__":
+    create_pdf_report()
