@@ -7,7 +7,7 @@
 
 param=$1
 
-if [ -z "$param" ] || ! [[ "$param" =~ ^[1-9][0-9]*$ ]] ; then
+if [[ "$param" != "clean" && ! "$param" =~ ^[1-9][0-9]*$ ]]; then
     echo ""
     echo ""
     echo "This program automates usage for all major executions in this project, found in the src folder."
@@ -45,6 +45,7 @@ elif [ "$param" == "clean" ]; then
     shopt -s nullglob
     rm ../report/images/*.png
     > ../report/data/metrics.txt
+    > ../report/data/timing.txt
     rm ../report/final_report.pdf
     echo "Cleared data"
     exit 0

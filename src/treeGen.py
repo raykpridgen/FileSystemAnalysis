@@ -12,7 +12,7 @@ from utils import getTimeInMs, parse_dist_params
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
 SAVE_TO_DIR = "../data/"
-
+METRICS_OUT = "../report/data/"
 # Clean up previous run with same name
 def clean_tree(rootName):
         # If root name already exists
