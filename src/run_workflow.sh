@@ -7,7 +7,7 @@
 
 param=$1
 
-if [ -z "$param" ]; then
+if [ -z "$param" ] || ! [[ "$param" =~ ^[1-9][0-9]*$ ]] ; then
     echo ""
     echo ""
     echo "This program automates usage for all major executions in this project, found in the src folder."
