@@ -327,30 +327,35 @@ Remove tree(s):
     with open(METRICS_OUT, 'w') as file:
         # Degree parameters
         file.write("Degree Distribution: " + degree_mode + "\n")
+        file.write("Degree, Probability\n")
         for key, value in degree_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # File Type distribution parameters
         file.write("File Type Distribution: " + type_mode + "\n")
+        file.write("Type, Probability\n")
         for key, value in file_type_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Ext parameters
-        file.write("Fiel Extension Distribution: " + ext_mode + "\n")
+        file.write("File Extension Distribution: " + ext_mode + "\n")
+        file.write("Extension, Probability\n")
         for key, value in file_ext_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Permission parameters
         file.write("Permissions Distribution: " + perm_mode + "\n")
+        file.write("Permission, Probability\n")
         for key, value in permissions_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Degree parameters
         file.write("File Size Distribution: " + size_mode + "\n")
+        file.write("Size (MB), Probability\n")
         for key, value in size_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")

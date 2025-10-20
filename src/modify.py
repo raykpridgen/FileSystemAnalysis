@@ -35,6 +35,7 @@ class ModifyTree:
         with open(METRICS_OUT, 'a') as file:
             # Degree parameters
             file.write("Modification Distribution: " + mod_mode + "\n")
+            file.write("Action, Probability\n")
             for key, value in self.editProbs.items():
                 file.write(f"{key}: {value}\n")
             file.write("\n")

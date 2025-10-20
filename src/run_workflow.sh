@@ -86,9 +86,10 @@ echo "Cleared data"
 > ../report/data/metrics.txt
 
 
-beforeTreeGen=${SECONDS}
+beforeTreeGen=$(date +%s%3N)
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
-treeGenTime=$((SECONDS-beforeTreeGen))
+afterTreeGen=$(date +%s%3N)
+treeGenTime=$((afterTreeGen - beforeTreeGen))
 
 
 echo "Initial tree created successfully."
@@ -99,9 +100,10 @@ sleep 1
 echo "Modifying the tree: ${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}"
 echo "Parameters: max_new_files=${MAX_NEW_FILES}, iterations=${ITERATIONS}"
 
-beforeModTree=${SECONDS}
+beforeModTree=$(date +%s%3N)
 python3 modify.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${ITERATIONS}"
-modTreeTime=$((SECONDS-beforeModTree))
+afterModTree=$(date +%s%3N)
+modTreeTime=$((afterModTree - beforeModTree))
 
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
 echo ""
@@ -114,7 +116,7 @@ sleep 2
 
 echo "Creating GUFI indexes..."
 echo "Creating index for original tree: ${GUFI_ORIGINAL_INDEX}"
-beforeGUFIcreate=${SECONDS}
+beforeGUFIcreate=$(date +%s%3N)
 gufi_dir2index "../data/${ORIGINAL_TREE_NAME}" "../data/${GUFI_ORIGINAL_INDEX}"
 echo ""
 echo "Creating index for modified trees, base name: ${GUFI_MODIFIED_INDEX_BASE_NAME}"
@@ -130,14 +132,15 @@ else
     echo "GUFI index creation complete."
     echo ""
 fi
-GUFIcreateTime=$((SECONDS-beforeGUFIcreate))
 
+afterGUFIcreate=$(date +%s%3N)
+GUFIcreateTime=$((afterGUFIcreate - beforeGUFIcreate))
 
 sleep 2
 
 echo "--- Running Comparisons ---"
 
-beforeComparison=${SECONDS}
+beforeComparison=$(date +%s%3N)
 #If there is more than one modified tree iteration
 if [ "$ITERATIONS" -gt 1 ]; then
     
@@ -216,9 +219,9 @@ if [ "$ITERATIONS" -gt 1 ]; then
 
     half=$(( (ITERATIONS + 1) / 2 ))  # integer division
     last=$((ITERATIONS - 1))
-    python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}${half}" first:"${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}${half}.png"
+    python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}${half}" "${half}:${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}.png"
 
-    python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}${half}" "${MODIFIED_TREE_BASE_NAME}${last}" "last:${MODIFIED_TREE_BASE_NAME}${half}-to-${MODIFIED_TREE_BASE_NAME}${last}.png"
+    python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}${half}" "${MODIFIED_TREE_BASE_NAME}${last}" "${last}:${MODIFIED_TREE_BASE_NAME}${half}-to-${MODIFIED_TREE_BASE_NAME}.png"
 
 else
     echo "Comparing tree metrics and whether real file system comparisons match GUFI comparisons..."
@@ -261,16 +264,18 @@ else
     fi
     
 fi
-comparisonTime=$((SECONDS-beforeComparison))
+
+afterComparison=$(date +%s%3N)
+comparisonTime=$((afterComparison - beforeComparison))
 
 echo ""
 echo "--- Workflow Complete ---"
 echo "   - Timing breakdown -  "
 echo ""
-echo "Tree creation time: $treeGenTime seconds" | tee ../report/data/timing.txt
-echo "Tree modification time: $modTreeTime seconds" | tee -a ../report/data/timing.txt
-echo "GUFI index creation time: $GUFIcreateTime seconds" | tee -a ../report/data/timing.txt
-echo "Tree comparison time: $comparisonTime seconds" | tee -a ../report/data/timing.txt
+echo "Tree creation time: $treeGenTime milliseconds" | tee ../report/data/timing.txt
+echo "Tree modification time: $modTreeTime milliseconds" | tee -a ../report/data/timing.txt
+echo "GUFI index creation time: $GUFIcreateTime milliseconds" | tee -a ../report/data/timing.txt
+echo "Tree comparison time: $comparisonTime milliseconds" | tee -a ../report/data/timing.txt
 
 echo ""
 echo "Generating visuals..."
