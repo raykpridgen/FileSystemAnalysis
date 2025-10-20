@@ -4,6 +4,54 @@
 # This script automates the full file tree comparison workflow.
 # =================================================================
 
+# --- Set up Date Command for Millisecond Portability ---
+
+cross_platform_date() {
+    # Attempt to run date with millisecond format (%3N)
+    local MILLISECONDS_FORMAT="+%s%3N"
+    local output=$(date "$MILLISECONDS_FORMAT" 2>/dev/null)
+    
+    # Check if the output contains the literal format string.
+    # This indicates that the 'date' utility did not recognize %N.
+    # We check for the format string itself, or the trailing 'N'.
+    if [[ "$output" == *"%N"* ]] || [[ "$output" =~ [0-9]+N$ ]]; then
+        # Fallback to seconds-only precision (BSD 'date' compatible)
+        date "+%s"
+    else
+        # Millisecond format worked (e.g., Linux or gdate is in use)
+        echo "$output"
+    fi
+}
+
+get_date_precision() {
+    local MILLISECONDS_FORMAT="+%s%3N"
+    local test_output=$(date "$MILLISECONDS_FORMAT" 2>/dev/null)
+    
+    # Check for the failure marker (literal format string parts)
+    if [[ "$test_output" == *"%N"* ]] || [[ "$test_output" =~ [0-9]+N$ ]]; then
+        echo "seconds"
+    else
+        echo "milliseconds"
+    fi
+}
+
+check_and_warn_on_fallback() {
+    local MILLISECONDS_FORMAT="+%s%3N"
+    local test_output=$(date "$MILLISECONDS_FORMAT" 2>/dev/null)
+    
+    # Check for the failure marker (literal format string parts)
+    if [[ "$test_output" == *"%N"* ]] || [[ "$test_output" =~ [0-9]+N$ ]]; then
+        # The user requested to print a message if the check fails.
+        # This generic warning notifies the user that the functionality is limited.
+        echo ""
+        echo "WARNING: 'date' utility lacks millisecond support. Falling back to seconds."
+        echo "For millisecond precision, ensure you have a version of 'date' from GNU Coreutils installed." 1>&2
+    fi
+}
+
+
+DATE_PRECISION=$(get_date_precision)
+
 
 param=$1
 MIN_DEPTH=$2
@@ -90,9 +138,9 @@ sleep 1
 > ../report/data/parameters.txt
 echo "Cleared data"
 
-beforeTreeGen=$(date +%s%3N)
+beforeTreeGen=$(cross_platform_date)
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
-afterTreeGen=$(date +%s%3N)
+afterTreeGen=$(cross_platform_date)
 treeGenTime=$((afterTreeGen - beforeTreeGen))
 
 
@@ -104,9 +152,9 @@ sleep 1
 echo "Modifying the tree: ${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}"
 echo "Parameters: max_new_files=${MAX_NEW_FILES}, iterations=${ITERATIONS}"
 
-beforeModTree=$(date +%s%3N)
+beforeModTree=$(cross_platform_date)
 python3 modify.py "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}" "${MAX_NEW_FILES}" "${ITERATIONS}"
-afterModTree=$(date +%s%3N)
+afterModTree=$(cross_platform_date)
 modTreeTime=$((afterModTree - beforeModTree))
 
 echo "Tree modification complete. Final directory is: ${MODIFIED_TREE_BASE_NAME}$((ITERATIONS-1))"
@@ -120,7 +168,7 @@ sleep 2
 
 echo "Creating GUFI indexes..."
 echo "Creating index for original tree: ${GUFI_ORIGINAL_INDEX}"
-beforeGUFIcreate=$(date +%s%3N)
+beforeGUFIcreate=$(cross_platform_date)
 gufi_dir2index "../data/${ORIGINAL_TREE_NAME}" "../data/${GUFI_ORIGINAL_INDEX}"
 echo ""
 echo "Creating index for modified trees, base name: ${GUFI_MODIFIED_INDEX_BASE_NAME}"
@@ -137,14 +185,14 @@ else
     echo ""
 fi
 
-afterGUFIcreate=$(date +%s%3N)
+afterGUFIcreate=$(cross_platform_date)
 GUFIcreateTime=$((afterGUFIcreate - beforeGUFIcreate))
 
 sleep 2
 
 echo "--- Running Comparisons ---"
 
-beforeComparison=$(date +%s%3N)
+beforeComparison=$(cross_platform_date)
 #If there is more than one modified tree iteration
 if [ "$ITERATIONS" -gt 1 ]; then
     
@@ -273,17 +321,20 @@ else
     
 fi
 
-afterComparison=$(date +%s%3N)
+afterComparison=$(cross_platform_date)
 comparisonTime=$((afterComparison - beforeComparison))
 
 echo ""
 echo "--- Workflow Complete ---"
 echo "   - Timing breakdown -  "
+check_and_warn_on_fallback
 echo ""
-echo "Tree creation time: $treeGenTime milliseconds" | tee ../report/data/timing.txt
-echo "Tree modification time: $modTreeTime milliseconds" | tee -a ../report/data/timing.txt
-echo "GUFI index creation time: $GUFIcreateTime milliseconds" | tee -a ../report/data/timing.txt
-echo "Tree comparison time: $comparisonTime milliseconds" | tee -a ../report/data/timing.txt
+echo "Tree creation time: $treeGenTime $DATE_PRECISION" | tee ../report/data/timing.txt
+echo "Tree modification time: $modTreeTime $DATE_PRECISION" | tee -a ../report/data/timing.txt
+echo "GUFI index creation time: $GUFIcreateTime $DATE_PRECISION" | tee -a ../report/data/timing.txt
+echo "Tree comparison time: $comparisonTime $DATE_PRECISION" | tee -a ../report/data/timing.txt
+
+
 
 echo ""
 echo "Generating visuals..."
