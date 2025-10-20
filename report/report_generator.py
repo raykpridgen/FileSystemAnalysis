@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -7,6 +8,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER
 
 # Directory setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +29,7 @@ def parse_parameters(filepath):
                 continue
             
             # Check if this is a section header (contains ':' but not at start)
-            if ':' in line and not line[0].isdigit():
+            if 'Distribution:' in line:
                 # Save previous section if exists
                 if current_section:
                     sections.append(current_section)
@@ -37,12 +39,18 @@ def parse_parameters(filepath):
                 current_section = {
                     'title': parts[0].strip(),
                     'subtitle': parts[1].strip() if len(parts) > 1 else '',
+                    'label' : [],
                     'data': []
                 }
             elif current_section and ':' in line:
                 # This is a key-value pair
                 key, value = line.split(':', 1)
                 current_section['data'].append([key.strip(), value.strip()])
+            
+            elif current_section and ',' in line:
+                # This is a label for the table
+                key, value = line.split(',', 1)
+                current_section['label'].append([key.strip(), value.strip()])
         
         # Add the last section
         if current_section:
@@ -57,7 +65,7 @@ def parse_metrics(filepath):
         for i, line in enumerate(f, 1):
             values = line.strip().split()
             if len(values) >= 3:
-                metrics.append([f"Iteration {i}", values[0], values[1], values[2]])
+                metrics.append([f"{i}", values[0], values[1], values[2]])
     return metrics
 
 def parse_timing(filepath):
@@ -67,6 +75,11 @@ def parse_timing(filepath):
         for line in f:
             if ':' in line:
                 desc, time = line.strip().split(':', 1)
+                timeVal, timeUnit = time.strip().split(' ', 1)
+                if int(timeVal) > 1000 and timeUnit == 'milliseconds':
+                    timeVal = str(int(timeVal) / 1000)
+                    timeUnit = 'seconds'
+                time = timeVal + " " + timeUnit
                 timing.append([desc.strip(), time.strip()])
     return timing
 
@@ -107,7 +120,7 @@ def categorize_files():
             # Check if it's an image file
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 # Check if it's the line graph
-                if 'line' in filename.lower() or 'graph' in filename.lower():
+                if 'line' in filename.lower() and 'graph' in filename.lower():
                     file_data['line_graph'] = filepath
                 # Check if it's an iteration image (contains ':' in filename)
                 elif ':' in filename:
@@ -140,9 +153,18 @@ def create_pdf_report():
     
     # Define styles
     styles = getSampleStyleSheet()
+    styles['Normal'].fontName = 'Times-Roman'
+    styles['Heading1'].fontName = 'Times-Roman'
+    styles['Heading2'].fontName = 'Times-Roman'
+    styles['Heading3'].fontName = 'Times-Roman'
+    styles['Title'].fontName = 'Times-Bold'
+
     title_style = styles['Heading1']
     heading_style = styles['Heading2']
     subheading_style = styles['Heading3']
+
+    heading_style.alignment = TA_CENTER
+    title_style.alignment = TA_CENTER
     
     # Add main title
     elements.append(Paragraph("Simulation Report", title_style))
@@ -165,8 +187,12 @@ def create_pdf_report():
             
             # Create table for this section
             if section['data']:
-                table_data = [['Parameter', 'Value']] + section['data']
-                t = Table(table_data, colWidths=[3*inch, 2.5*inch])
+                if section['label']:
+                    table_data = [[section['label'][0][0], section['label'][0][1]]] + section['data']
+                else:
+                    print('Failed to load, returning')
+                    sys.exit(1)
+                t = Table(table_data, colWidths=[3*inch, 3*inch])
                 t.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -187,7 +213,7 @@ def create_pdf_report():
         
         metrics = parse_metrics(file_data['metrics'])
         if metrics:
-            table_data = [['Iteration', 'Value', 'Change 1', 'Change 2']] + metrics
+            table_data = [['Iteration', 'Tree Edit Distance', 'Tree Height', 'Leaf Nodes']] + metrics
             t = Table(table_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -209,7 +235,7 @@ def create_pdf_report():
         
         timing = parse_timing(file_data['timing'])
         if timing:
-            table_data = [['Description', 'Time']] + timing
+            table_data = [['Execution', 'Time']] + timing
             t = Table(table_data, colWidths=[4*inch, 2*inch])
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),

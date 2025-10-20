@@ -6,15 +6,18 @@
 
 
 param=$1
-
-if [[ "$param" != "clean" && ! "$param" =~ ^[1-9][0-9]*$ ]]; then
+MIN_DEPTH=$2
+MAX_DEPTH=$3
+# If first param is not clean, and the params are not positive integers, print usage
+if [[ "$param" != "clean" ]] && \
+    [[ ! "$param" =~ ^[1-9][0-9]*$ || ! "$MIN_DEPTH" =~ ^[1-9][0-9]*$ || ! "$MAX_DEPTH" =~ ^[1-9][0-9]*$ ]]; then
     echo ""
     echo ""
     echo "This program automates usage for all major executions in this project, found in the src folder."
     echo " -- Usage is expected for generating, modifying, plotting, and generating a report for a filesystem tree."
     echo ""
     echo "To execute this program, run:"
-    echo "    $0 <iterations>"
+    echo "    $0 <iterations> <min_tree_depth> <max_tree_depth>"
     echo "Or, to clean data:"
     echo "    $0 clean"
     echo ""
@@ -46,7 +49,7 @@ elif [ "$param" == "clean" ]; then
     rm ../report/images/*.png
     > ../report/data/metrics.txt
     > ../report/data/timing.txt
-    rm ../report/final_report.pdf
+    > ../report/data/parameters.txt
     echo "Cleared data"
     exit 0
 fi
@@ -59,8 +62,8 @@ ITERATIONS=$param
 
 # Generate random parameters for trees.py
 # Depth and Degree
-TREES_MIN_DEPTH=$(( 5 ))
-TREES_MAX_DEPTH=$(( 10 ))
+TREES_MIN_DEPTH=$MIN_DEPTH
+TREES_MAX_DEPTH=$MAX_DEPTH
 
 # Generate random parameters for modify.py
 # Max new files (0 - 3)
@@ -82,9 +85,10 @@ shopt -s nullglob
 rm ../report/images/*.png
 rm -rf ../data && mkdir ../data
 sleep 1
-echo "Cleared data"
 > ../report/data/metrics.txt
-
+> ../report/data/timing.txt
+> ../report/data/parameters.txt
+echo "Cleared data"
 
 beforeTreeGen=$(date +%s%3N)
 python3 treeGen.py "${ORIGINAL_TREE_NAME}" "${TREES_MIN_DEPTH}" "${TREES_MAX_DEPTH}"
@@ -161,6 +165,9 @@ if [ "$ITERATIONS" -gt 1 ]; then
     if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : Match"
         echo "${FS_Metrics[@]}" > ../report/data/metrics.txt
+
+        python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}0" "0:${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}0.png"
+
         
     else
         echo "${ORIGINAL_TREE_NAME} -> ${MODIFIED_TREE_BASE_NAME}0 : DOES NOT MATCH"
@@ -195,6 +202,8 @@ if [ "$ITERATIONS" -gt 1 ]; then
         if [ "${FS_Metrics[*]}" == "${GUFI_Metrics[*]}" ]; then
             echo "${MODIFIED_TREE_BASE_NAME}$((i-1)) -> ${MODIFIED_TREE_BASE_NAME}$i : Match"
             echo "${FS_Metrics[@]}" >> ../report/data/metrics.txt
+            python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}$((i-1))" "${MODIFIED_TREE_BASE_NAME}${i}" "${i}:${MODIFIED_TREE_BASE_NAME}$((i-1))-to-${MODIFIED_TREE_BASE_NAME}${i}.png"
+            
 
         else
             echo ""
@@ -217,11 +226,10 @@ if [ "$ITERATIONS" -gt 1 ]; then
         fi
     done
 
-    half=$(( (ITERATIONS + 1) / 2 ))  # integer division
-    last=$((ITERATIONS - 1))
-    python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}${half}" "${half}:${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}.png"
-
-    python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}${half}" "${MODIFIED_TREE_BASE_NAME}${last}" "${last}:${MODIFIED_TREE_BASE_NAME}${half}-to-${MODIFIED_TREE_BASE_NAME}.png"
+    #half=$(( (ITERATIONS + 1) / 2 ))  # integer division
+    #last=$((ITERATIONS - 1))
+    #python3 visualize.py compare "${ORIGINAL_TREE_NAME}" "${MODIFIED_TREE_BASE_NAME}${half}" "${half}:${ORIGINAL_TREE_NAME}-to-${MODIFIED_TREE_BASE_NAME}.png"
+    #python3 visualize.py compare "${MODIFIED_TREE_BASE_NAME}${half}" "${MODIFIED_TREE_BASE_NAME}${last}" "${last}:${MODIFIED_TREE_BASE_NAME}${half}-to-${MODIFIED_TREE_BASE_NAME}.png"
 
 else
     echo "Comparing tree metrics and whether real file system comparisons match GUFI comparisons..."
