@@ -1,10 +1,20 @@
 import time
 import json
+from pathlib import Path
+import os
 
 def getTimeInMs(startTime, endTime):
     returnTime = (endTime - startTime) * 1000
     return f"{returnTime:.2f}"
 
+def get_tree_depth(root: Path):
+    max_depth = 0
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Compute depth relative to root
+        rel_depth = len(Path(dirpath).relative_to(root).parts)
+        if rel_depth > max_depth:
+            max_depth = rel_depth
+    return max_depth
 
 def parse_dist_params(degree_mode="low_degree", filetype_mode="default", file_ext_mode="default", permissions_mode="default", size_mode="default"):
     

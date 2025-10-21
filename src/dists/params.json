@@ -34,7 +34,33 @@
             "5": 0.08,
             "6": 0.04,
             "7": 0.03
-        }
+        },
+        "balanced": {
+            "0": 0.10,
+            "1": 0.12,
+            "2": 0.15,
+            "3": 0.15,
+            "4": 0.13,
+            "5": 0.10,
+            "6": 0.08,
+            "7": 0.07,
+            "8": 0.05,
+            "9": 0.03,
+            "10": 0.02
+        },
+        "flat": {
+            "0": 0.05,
+            "1": 0.10,
+            "2": 0.15,
+            "3": 0.15,
+            "4": 0.15,
+            "5": 0.15,
+            "6": 0.10,
+            "7": 0.05,
+            "8": 0.05,
+            "9": 0.03,
+            "10": 0.02
+        }    
     },
 
     "filetypes": {
@@ -45,6 +71,21 @@
             ".log" : 0.167, 
             ".md" : 0.166, 
             ".xml" : 0.167
+        },
+        "source_tree": {
+            ".c": 0.20,
+            ".cpp": 0.20,
+            ".h": 0.20,
+            ".py": 0.15,
+            ".txt": 0.10,
+            ".md": 0.10,
+            ".json": 0.05
+        },
+        "logs": {
+            ".log": 0.60,
+            ".txt": 0.20,
+            ".csv": 0.10,
+            ".json": 0.10
         }
     },
 
@@ -54,6 +95,16 @@
             "0o644" : 0.25,
             "0o444" : 0.15,
             "0o744" : 0.05
+        },
+        "open_access": {
+            "0o777": 0.40,
+            "0o755": 0.40,
+            "0o644": 0.20
+        },
+        "restricted": {
+            "0o600": 0.50,
+            "0o644": 0.30,
+            "0o400": 0.20
         }
     },
 
@@ -72,6 +123,16 @@
             "small": {"range": [0, 1000], "prob": 0.30},
             "medium": {"range": [1000, 10000], "prob": 0.31},
             "large": {"range": [1000000, 5000000], "prob": 0.39}
+        },
+        "many_small": {
+            "small": {"range": [0, 2000], "prob": 0.75},
+            "medium": {"range": [2000, 10000], "prob": 0.20},
+            "large": {"range": [10000, 500000], "prob": 0.05}
+        },
+        "huge_files": {
+            "small": {"range": [0, 10000], "prob": 0.10},
+            "medium": {"range": [10000, 1000000], "prob": 0.30},
+            "large": {"range": [1000000, 10000000], "prob": 0.60}
         }
     },
 
@@ -103,7 +164,7 @@
             "createFile" : 0.5, 
             "createFolder" : 0.5,
             "editFile" : 0.6, 
-            "deleteFolder" : 0.01,
+            "deleteFolder" : 0.005,
             "deleteFile" : 0.2,
             "createDepth" : 5,
             "root" : -1
@@ -112,7 +173,7 @@
             "createFile" : 0.3, 
             "createFolder" : 0.3,
             "editFile" : 0.6, 
-            "deleteFolder" : 0.05,
+            "deleteFolder" : 0.005,
             "deleteFile" : 0.3,
             "createDepth" : 5,
             "root" : -1
@@ -121,11 +182,38 @@
             "createFile" : 0.5, 
             "createFolder" : 0.5,
             "editFile" : 0.3, 
-            "deleteFolder" : 0.03,
+            "deleteFolder" : 0.005,
             "deleteFile" : 0.4,
             "createDepth" : 3,
-            "root" : 5
-        }  
+            "root" : 0.65
+        },
+        "idle": {
+            "createFile": 0.1,
+            "createFolder": 0.1,
+            "editFile": 0.1,
+            "deleteFolder": 0.005,
+            "deleteFile": 0.05,
+            "createDepth": 2,
+            "root": -1
+        },
+        "reorganize": {
+            "createFile": 0.3,
+            "createFolder": 0.2,
+            "editFile": 0.4,
+            "deleteFolder": 0.005,
+            "deleteFile": 0.2,
+            "createDepth": 4,
+            "root": -1
+        },
+        "user_mode_deep": {
+            "createFile": 0.4,
+            "createFolder": 0.4,
+            "editFile": 0.3,
+            "deleteFolder": 0.005,
+            "deleteFile": 0.2,
+            "createDepth": 6,
+            "root": 0.85
+        }
     },
 
     "metadata": {

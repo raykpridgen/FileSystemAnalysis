@@ -6,6 +6,7 @@ from networkx.drawing.nx_agraph import graphviz_layout
 from utils import getTimeInMs
 import time
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 class TreeVisualizer:
     def __init__(self, rootA, rootB=None, fileSavePath="output", timing=True, savePath="../report/images/", pullPath="../data/"):
@@ -24,20 +25,22 @@ class TreeVisualizer:
         self.timing = timing
 
         startAdjA = time.perf_counter() if self.timing else None
-        self.graphA = self.build_adjacency_graph(self.rootA)
+        self.graphA, self.metaA = self.build_adjacency_graph(self.rootA)
         endAdjA = time.perf_counter() if self.timing else None
         if self.timing:
-            print(f"Built adjacency graph for {rootA} in {getTimeInMs(startAdjA, endAdjA)} ms")
+            #print(f"Built adjacency graph for {rootA} in {getTimeInMs(startAdjA, endAdjA)} ms")
+            pass
         
         if rootB:
             if not os.path.exists(pullPath + rootB):
                 raise FileNotFoundError(f"Root path does not exist: {rootB}")
             self.rootB = Path(pullPath + rootB).resolve()
             startAdjB = time.perf_counter() if self.timing else None
-            self.graphB = self.build_adjacency_graph(self.rootB)
+            self.graphB, self.metaB = self.build_adjacency_graph(self.rootB)
             endAdjB = time.perf_counter() if self.timing else None
             if self.timing:
-                print(f"Built adjacency graph for {rootB} in {getTimeInMs(startAdjB, endAdjB)} ms")
+                #print(f"Built adjacency graph for {rootB} in {getTimeInMs(startAdjB, endAdjB)} ms")
+                pass
         
         # Generate and save visualization
         if hasattr(self, "graphB"):
@@ -45,23 +48,38 @@ class TreeVisualizer:
         else:
             self.visualize_single_tree()
 
-    def walk(self, current: Path, graph, root: Path):
+    def walk(self, current: Path, graph, metadata, root: Path):
         """Recursively build adjacency dictionary { parent: [children] } using relative paths."""
         current_key = str(current.relative_to(root)).lower()
         graph[current_key] = []
+        
+        # Metadata for current folder node 
+        metadata[current_key] = {
+            'is_dir': current.is_dir(),
+            'mtime': current.stat(follow_symlinks=False).st_mtime if current.exists() else None,
+            'size': current.stat(follow_symlinks=False).st_size if current.is_file() else None,
+        }
+        
         for entry in sorted(os.listdir(current)):
             full_path = current / entry
             child_key = str(full_path.relative_to(root)).lower()
             graph[current_key].append(child_key)
             if full_path.is_dir():
-                self.walk(full_path, graph, root)
+                self.walk(full_path, graph, metadata, root)
+            # Establish metadata and graph position for child
             else:
                 graph[child_key] = []
+                metadata[child_key] = {
+                "is_dir": False,
+                "mtime": full_path.stat(follow_symlinks=False).st_mtime,
+                "size": full_path.stat(follow_symlinks=False).st_size,
+                }
 
     def build_adjacency_graph(self, path_to_walk):
         graph = {}
-        self.walk(path_to_walk, graph, path_to_walk)
-        return graph
+        metadata = {}
+        self.walk(path_to_walk, graph, metadata, path_to_walk)
+        return graph, metadata
 
     def merge_graphs(self):
         G = nx.DiGraph()
@@ -76,6 +94,22 @@ class TreeVisualizer:
                         G.edges[parent, child]["source"] = "both"
                     else:
                         G.add_edge(parent, child, source="B")
+
+        # Include metadata for nodes to see mod time
+        for key in set(self.metaA.keys()).union(self.metaB.keys()):
+            a = self.metaA.get(key)
+            b = self.metaB.get(key)
+            if a and b:
+                changed = a["mtime"] != b["mtime"]
+            else:
+                changed = False
+            G.add_node(
+                key, 
+                changed=changed, 
+                mtimeA=a["mtime"] if a else None,
+                mtimeB=b["mtime"] if b else None
+                )
+            
         return G
     
     def visualize_single_tree(self):
@@ -177,7 +211,10 @@ class TreeVisualizer:
             is_dir = os.path.isdir(abs_path)
             # No change
             if in_A and in_B:
-                node_colors.append("darkblue" if is_dir else "lightblue")
+                if G.nodes[node].get("changed") and not is_dir:
+                    node_colors.append("yellow")
+                else:
+                    node_colors.append("darkblue" if is_dir else "lightblue")
             
             # Added
             elif in_B:
@@ -204,7 +241,23 @@ class TreeVisualizer:
             else:
                 edge_colors.append("salmon")
         
+        # For legend
+        folder_patch = mpatches.Patch(color='darkblue', label='Folder')
+        file_patch = mpatches.Patch(color='lightblue', label='File')
+        add_folder_patch = mpatches.Patch(color='darkgreen', label='New Folder')
+        add_file_patch = mpatches.Patch(color='lightgreen', label='New File')
+        remove_folder_patch = mpatches.Patch(color='darkred', label='Removed Folder')
+        remove_file_patch = mpatches.Patch(color='salmon', label='Removed Folder')
+        edited_patch = mpatches.Patch(color='yellow', label="Modified File")
+        
         plt.figure(figsize=(12, 9))
+        plt.legend(
+            handles=[folder_patch, file_patch, add_folder_patch, add_file_patch, remove_folder_patch, remove_file_patch, edited_patch],
+            loc='upper right',
+            frameon=True,
+            framealpha=0.9,
+            title='Color Scheme'
+        )
 
         nx.draw_networkx_edges(
             G,
@@ -246,7 +299,6 @@ class TreeVisualizer:
 
         plt.axis("off")
         plt.title("Directory Tree")
-
         plt.tight_layout()
 
         if os.path.isfile(self.fileSavePath):

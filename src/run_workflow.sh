@@ -131,6 +131,7 @@ echo "Parameters: min_depth=${TREES_MIN_DEPTH}, max_depth=${TREES_MAX_DEPTH}"
 
 shopt -s nullglob
 rm ../report/images/*.png
+rm ../report/final_report.pdf
 rm -rf ../data && mkdir ../data
 sleep 1
 > ../report/data/metrics.txt

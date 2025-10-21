@@ -1,18 +1,22 @@
-import random
 import os
 import shutil
 from pathlib import Path
 import random as ran
 import sys
-import random
 import time
-import json
 from utils import getTimeInMs, parse_dist_params
 # CREATION TIME IMMUTABLE ON LINUX
 # pywin32 TO MODIFY CREATION ON WINDOWS
 
 SAVE_TO_DIR = "../data/"
 METRICS_OUT = "../report/data/parameters.txt"
+
+# JSON SETTINGS
+DEGREE_MODE_JSON = "balanced"
+TYPE_MODE_JSON = "default"
+EXT_MODE_JSON = "source_tree"
+PERM_MODE_JSON = "open_access"
+SIZE_MODE_JSON = "compact"
 
 # Clean up previous run with same name
 def clean_tree(rootName):
@@ -300,7 +304,7 @@ Remove tree(s):
             
             sys.exit(0)
 
-    # Handle GENERATION
+    # Handle gen
     if len(args) < 3:
         print("Usage: python3 treeGen.py <root_name> <minDepth> <maxDepth>")
         sys.exit(1)
@@ -308,53 +312,46 @@ Remove tree(s):
     rootName = f"{SAVE_TO_DIR}{sys.argv[1]}"
     depthRange = [int(sys.argv[2]), int(sys.argv[3])]
     timeRange = (int(time.time()) - 30*24*60*60, int(time.time()))
-
-
-    degree_mode = "low_degree"
-    type_mode = "default"
-    ext_mode = "default"
-    perm_mode = "default"
-    size_mode = "default"
     
     degree_distr, file_type_distr, file_ext_distr, permissions_distr, size_distr = parse_dist_params(
-        degree_mode=degree_mode, 
-        filetype_mode=type_mode,
-        file_ext_mode=ext_mode,
-        permissions_mode=perm_mode,
-        size_mode=size_mode
+        degree_mode=DEGREE_MODE_JSON, 
+        filetype_mode=TYPE_MODE_JSON,
+        file_ext_mode=EXT_MODE_JSON,
+        permissions_mode=PERM_MODE_JSON,
+        size_mode=SIZE_MODE_JSON
         )
 
     with open(METRICS_OUT, 'w') as file:
         # Degree parameters
-        file.write("Degree Distribution: " + degree_mode + "\n")
+        file.write("Degree Distribution: " + DEGREE_MODE_JSON + "\n")
         file.write("Degree, Probability\n")
         for key, value in degree_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # File Type distribution parameters
-        file.write("File Type Distribution: " + type_mode + "\n")
+        file.write("File Type Distribution: " + TYPE_MODE_JSON + "\n")
         file.write("Type, Probability\n")
         for key, value in file_type_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Ext parameters
-        file.write("File Extension Distribution: " + ext_mode + "\n")
+        file.write("File Extension Distribution: " + EXT_MODE_JSON + "\n")
         file.write("Extension, Probability\n")
         for key, value in file_ext_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Permission parameters
-        file.write("Permissions Distribution: " + perm_mode + "\n")
+        file.write("Permissions Distribution: " + PERM_MODE_JSON + "\n")
         file.write("Permission, Probability\n")
         for key, value in permissions_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")
 
         # Degree parameters
-        file.write("File Size Distribution: " + size_mode + "\n")
+        file.write("File Size Distribution: " + SIZE_MODE_JSON + "\n")
         file.write("Size (MB), Probability\n")
         for key, value in size_distr.items():
             file.write(f"{key}: {value}\n")

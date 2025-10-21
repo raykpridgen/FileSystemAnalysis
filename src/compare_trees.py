@@ -1,6 +1,7 @@
 import tree_metrics as tm
 import sys
-
+import time
+from utils import getTimeInMs
 
 def compare_FS_trees(path1, path2):
     """
@@ -68,12 +69,16 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 6 and sys.argv[4] == "-r" and sys.argv[3] == "--gufi":
         try:
+                    
+            startCompareTime = time.perf_counter()
+            
             root = tm.GUFI_to_zssNodes(sys.argv[1])
             root2 = tm.GUFI_to_zssNodes(sys.argv[2])
 
             with open(sys.argv[5], "a") as f:
                 f.write(f"{tm.zss.simple_distance(root, root2)} {(tm.treeHeight(root2)-tm.treeHeight(root)):+} {(tm.countLeaves(root2)-tm.countLeaves(root)):+}\n")
-
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
 
@@ -81,42 +86,51 @@ if __name__ == "__main__":
 
     elif len(sys.argv) == 5 and sys.argv[3] == "-r":
         try:
+            startCompareTime = time.perf_counter()
             root = tm.fileSystem_to_zssNodes(sys.argv[1])
             root2 = tm.fileSystem_to_zssNodes(sys.argv[2])
 
             with open(sys.argv[4], "a") as f:
                 f.write(f"{tm.zss.simple_distance(root, root2)} {(tm.treeHeight(root2)-tm.treeHeight(root)):+} {(tm.countLeaves(root2)-tm.countLeaves(root)):+}\n")
-                
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
     
     
     elif len(sys.argv) == 5 and sys.argv[4] == "-r" and sys.argv[3] == "--gufi":
         try:
+            startCompareTime = time.perf_counter()
             root = tm.GUFI_to_zssNodes(sys.argv[1])
             root2 = tm.GUFI_to_zssNodes(sys.argv[2])
             
             print(f"{tm.zss.simple_distance(root, root2)}")
             print(f"{(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
             print(f"{(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
 
 
     elif len(sys.argv) == 4 and sys.argv[3] == "-r":
         try:
+            startCompareTime = time.perf_counter()
             root = tm.fileSystem_to_zssNodes(sys.argv[1])
             root2 = tm.fileSystem_to_zssNodes(sys.argv[2])
             
             print(f"{tm.zss.simple_distance(root, root2)}")
             print(f"{(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
             print(f"{(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
 
 
     elif len(sys.argv) == 4 and sys.argv[3] == "--gufi":
         try:
+            startCompareTime = time.perf_counter()
             root = tm.GUFI_to_zssNodes(sys.argv[1])
             root2 = tm.GUFI_to_zssNodes(sys.argv[2])
             
@@ -124,6 +138,8 @@ if __name__ == "__main__":
             print(f"Tree Edit Distance: {tm.zss.simple_distance(root, root2)}")
             print(f"Change in tree height: {(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
             print(f"Change in number of leaf nodes: {(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
 
@@ -131,6 +147,7 @@ if __name__ == "__main__":
 
     elif len(sys.argv) == 3:
         try:
+            startCompareTime = time.perf_counter()
             root = tm.fileSystem_to_zssNodes(sys.argv[1])
             root2 = tm.fileSystem_to_zssNodes(sys.argv[2])
             
@@ -138,9 +155,13 @@ if __name__ == "__main__":
             print(f"Tree Edit Distance: {tm.zss.simple_distance(root, root2)}")
             print(f"Change in tree height: {(tm.treeHeight(root2)-tm.treeHeight(root)):+}")
             print(f"Change in number of leaf nodes: {(tm.countLeaves(root2)-tm.countLeaves(root)):+}")
+            endCompareTime = time.perf_counter()
+            print(f"Compared trees in {getTimeInMs(startCompareTime, endCompareTime)} ms.", file=sys.stderr)
         except Exception as e:
             print(f"Input Invalid: {e}\nUsage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
 
 
     else:
         print("Usage:\ncompare_trees.py <root1> <root2>\nor\ncompare_trees.py <GUFI_index1> <GUFI_index2> --gufi")
+    
+        
