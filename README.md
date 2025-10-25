@@ -23,10 +23,11 @@ After installing, verify the installation by running this command in your termin
 ### Step 2. Clone the repo
 `git clone https://github.com/raykpridgen/FileSystemAnalysis`
 
-### Step 3. Move into the src directory
-`cd FileSystemAnalysis/src`
+### Step 3. Move into the root directory of the repo
 
-### Step 4. Creating the Docker Image
+`cd FileSystemAnalysis`
+
+### Step 4. Creating the Docker image
 Ensure the Docker Engine is running and run this command:
 
 `docker build -t file-system-analysis:3.13 .`
@@ -36,24 +37,23 @@ This process will take a while.
 ### Optional Step: Delete the repo
 Once the image is successfully built, you no longer need the local repository files for execution only. However, we highly recommend keeping the local repository for simple debugging or for rebuilding the image later, should you choose to modify the source code or if your image is lost.
 
-### Step 5. Creating the Docker Volumes
+### Step 5. Creating the output folders
 Navigate to a directory where you would like the output from our workflow to be stored and run these commands:
 
-`mkdir report`
+`mkdir -p report`
 
-`mkdir data`
+`mkdir -p data`
 
-`docker run --rm \
-    -v "$(pwd)/reports":/app/report \
-    -v "$(pwd)/data":/app/data \
-    file-system-analysis:3.13`
+This command will create two directories (report and data) if they do not already exist. These folders will be linked to the corresponding report and data folders in your Docker container. Output written to these directories in the container will appear on your host machine instead.
 
-This will create two folders and link them to your image. Data will store any generated file trees. Report will store any generated text files, images, and PDF reports.
+Data will store any generated file trees. Report will store any generated text files, images, and PDF reports.
+
+This link must be established every time you run the container via the docker run command provided in the next step.
 
 ### Step 6. Launching the Container's Command Line Interface
 To access the command line interface in the container, run this command:
 
-`docker run -it --rm file-system-analysis:3.13 /bin/bash`
+`docker run -it --rm -v "$(pwd)/report":/app/report -v "$(pwd)/data":/app/data file-system-analysis:3.13 /bin/bash`
 
 Here, you can execute the scripts in our workflow. To exit the container, enter the command:
 
