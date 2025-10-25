@@ -12,9 +12,9 @@ from reportlab.lib.enums import TA_CENTER
 
 # Directory setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-IMG_DIR = os.path.join(BASE_DIR, "images")
-OUTPUT_PDF = os.path.join(BASE_DIR, "final_report.pdf")
+DATA_DIR = os.path.join(BASE_DIR, "../report/data")
+IMG_DIR = os.path.join(BASE_DIR, "../report/images")
+OUTPUT_PDF = os.path.join(BASE_DIR, "../report/final_report.pdf")
 
 
 def parse_parameters(filepath):
