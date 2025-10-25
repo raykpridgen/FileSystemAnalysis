@@ -48,7 +48,7 @@ This command will create two directories (report and data) if they do not alread
 
 Data will store any generated file trees. Report will store any generated text files, images, and PDF reports.
 
-This link must be established every time you run the container via the docker run command provided in the next step.
+These links must be established every time you run the container via the docker run command provided in the next step.
 
 ### Step 6. Launching the Container's Command Line Interface
 To access the command line interface in the container, run this command:
