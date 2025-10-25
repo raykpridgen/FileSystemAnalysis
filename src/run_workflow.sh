@@ -4,6 +4,10 @@
 # This script automates the full file tree comparison workflow.
 # =================================================================
 
+mkdir -p ../data
+mkdir -p ../report/data
+mkdir -p ../report/images
+
 # --- Set up Date Command for Millisecond Portability ---
 
 cross_platform_date() {
@@ -41,8 +45,6 @@ check_and_warn_on_fallback() {
     
     # Check for the failure marker (literal format string parts)
     if [[ "$test_output" == *"%N"* ]] || [[ "$test_output" =~ [0-9]+N$ ]]; then
-        # The user requested to print a message if the check fails.
-        # This generic warning notifies the user that the functionality is limited.
         echo ""
         echo "WARNING: 'date' utility lacks millisecond support. Falling back to seconds."
         echo "For millisecond precision, ensure you have a version of 'date' from GNU Coreutils installed." 1>&2
@@ -344,4 +346,4 @@ PULL_FROM_PATH="../data"
 SAVE_TO_PATH="../report/images" 
 
 echo Generating report...
-python3 ../report/report_generator.py
+python3 report_generator.py

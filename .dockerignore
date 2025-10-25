@@ -1,0 +1,14 @@
+# Ignore Git history (Docker includes .git/ by default)
+**/.git
+
+# Ignore large, temporary data files
+**/*.bak
+**/data/
+**/test_data/
+**/raw_logs/
+
+# Ignore local environment files
+venv/
+__pycache__/
+.vscode/
+.DS_Store
