@@ -352,7 +352,7 @@ Remove tree(s):
 
         # Degree parameters
         file.write("File Size Distribution: " + SIZE_MODE_JSON + "\n")
-        file.write("Size (MB), Probability\n")
+        file.write("Size Type, Sample Range and Probability\n")
         for key, value in size_distr.items():
             file.write(f"{key}: {value}\n")
         file.write("\n")

@@ -1,7 +1,7 @@
 import os
 import sys
 import glob
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -165,15 +165,16 @@ def create_pdf_report():
 
     heading_style.alignment = TA_CENTER
     title_style.alignment = TA_CENTER
-    
+    subheading_style.alignment = TA_CENTER
+
     # Add main title
-    elements.append(Paragraph("Simulation Report", title_style))
+    elements.append(Paragraph("Filesystem Analysis Workflow Report", title_style))
     elements.append(Spacer(1, 0.3*inch))
     
     # ===== PARAMETERS SECTION =====
     if file_data['parameters']:
         elements.append(Paragraph("Parameters", heading_style))
-        elements.append(Spacer(1, 0.2*inch))
+        elements.append(Spacer(0.5, 0.2*inch))
         
         param_sections = parse_parameters(file_data['parameters'])
         
@@ -182,9 +183,7 @@ def create_pdf_report():
             title_text = section['title']
             if section['subtitle']:
                 title_text += f" ({section['subtitle']})"
-            elements.append(Paragraph(title_text, subheading_style))
-            elements.append(Spacer(1, 0.1*inch))
-            
+
             # Create table for this section
             if section['data']:
                 if section['label']:
@@ -192,7 +191,7 @@ def create_pdf_report():
                 else:
                     print('Failed to load, returning')
                     sys.exit(1)
-                t = Table(table_data, colWidths=[3*inch, 3*inch])
+                t = Table(table_data, colWidths=[2*inch, 3*inch])
                 t.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -203,8 +202,7 @@ def create_pdf_report():
                     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
                 ]))
-                elements.append(t)
-                elements.append(Spacer(1, 0.2*inch))
+                elements.append(KeepTogether([Paragraph(title_text, subheading_style), Spacer(1, 0.1*inch), t, Spacer(1, 0.2*inch)]))
     
     # ===== METRICS SECTION =====
     if file_data['metrics']:
@@ -253,7 +251,7 @@ def create_pdf_report():
     # ===== LINE GRAPH =====
     if file_data['line_graph']:
         elements.append(PageBreak())
-        elements.append(Paragraph("Overall Trend", heading_style))
+        elements.append(Paragraph("Overall Metrics", heading_style))
         elements.append(Spacer(1, 0.2*inch))
         img = Image(file_data['line_graph'], width=6*inch, height=4*inch)
         elements.append(img)

@@ -70,5 +70,12 @@ GUFI:
 - Graphs
 - Timing
 
-## Future - C Migration
 ### RAG / ML Usage with GUFI
+
+# 10/21
+## LaTex Report
+## Video walking through workflow
+- Adress GUFI CMakeLists issues on Mac
+- Standardize installation (Docker?)
+### Simple, layman terms README
+## Implement GUFI installation in README

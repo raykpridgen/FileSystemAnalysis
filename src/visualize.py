@@ -247,7 +247,7 @@ class TreeVisualizer:
         add_folder_patch = mpatches.Patch(color='darkgreen', label='New Folder')
         add_file_patch = mpatches.Patch(color='lightgreen', label='New File')
         remove_folder_patch = mpatches.Patch(color='darkred', label='Removed Folder')
-        remove_file_patch = mpatches.Patch(color='salmon', label='Removed Folder')
+        remove_file_patch = mpatches.Patch(color='salmon', label='Removed File')
         edited_patch = mpatches.Patch(color='yellow', label="Modified File")
         
         plt.figure(figsize=(12, 9))
