@@ -66,17 +66,22 @@ If you already have GUFI installed and you want to run the workflow directly on 
 ### Step 1. Clone the repo
 `git clone https://github.com/raykpridgen/FileSystemAnalysis`
 
+
 ### Step 2. Move into the src directory
 `cd FileSystemAnalysis/src`
 
+### Step 3. Clone the GUFI repo
+`mkdir gufi && cd gufi && git clone https://github.com/mar-file-system/GUFI` 
 
-### Step 3. Create a virtual environment
+After this is cloned, please follow the setup instructions withing the GUFI readme to set up GUFi
+
+### Step 4. Create a virtual environment
 
 To create a virtual environment with all necessary dependencies to run our workflow, run this command:
 
 `./make_venv.sh`
 
-### Step 4. Activate your virtual environment
+### Step 5. Activate your virtual environment
 
 While still in the src directory, run this command to activate the virtual environment:
 
