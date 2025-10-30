@@ -61,11 +61,10 @@ Here, you can execute the scripts in our workflow. To exit the container, enter 
 
 ## Alternate Method: Local Setup
 
-If you already have GUFI installed and you want to run the workflow directly on your host machine:
+If you want to run the workflow directly on your host machine:
 
 ### Step 1. Clone the repo
 `git clone https://github.com/raykpridgen/FileSystemAnalysis`
-
 
 ### Step 2. Move into the src directory
 `cd FileSystemAnalysis/src`
@@ -73,7 +72,7 @@ If you already have GUFI installed and you want to run the workflow directly on 
 ### Step 3. Clone the GUFI repo
 `mkdir gufi && cd gufi && git clone https://github.com/mar-file-system/GUFI` 
 
-After this is cloned, please follow the setup instructions withing the GUFI readme to set up GUFi
+After this is cloned, please follow the setup instructions within the GUFI readme to set up GUFI.
 
 ### Step 4. Create a virtual environment
 
