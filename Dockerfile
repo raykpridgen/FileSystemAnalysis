@@ -49,10 +49,23 @@ RUN pip3 install zss matplotlib igraph networkx pygraphviz reportlab
 # ====================================================================
 FROM python:3.13-slim
 
-# 1. Set the application working directory
+# 1. INSTALL RUNTIME DEPENDENCIES
+# These are the runtime libraries needed by GUFI binaries and Python packages
+RUN apt-get update && \
+    apt-get install -y \
+        libsqlite3-0 \
+        libacl1 \
+        libpcre2-8-0 \
+        zlib1g \
+        libjson-c5 \
+        graphviz \
+        libgraphviz4 \
+        && rm -rf /var/lib/apt/lists/*
+
+# 2. Set the application working directory
 WORKDIR /app
 
-# 2. COPY COMPILED ARTIFACTS from the builder stage:
+# 3. COPY COMPILED ARTIFACTS from the builder stage:
 
 # a. GUFI Binaries (Executables)
 COPY --from=builder /usr/local/bin/gufi_* /usr/local/bin/
@@ -64,12 +77,15 @@ COPY --from=builder /usr/local/lib/ /usr/local/lib/
 # c. Python Site Packages
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
-# 3. COPY MAIN REPO FILES
+# d. Update the dynamic linker cache so GUFI binaries can find their libraries
+RUN ldconfig
+
+# 4. COPY MAIN REPO FILES
 COPY . /app
 
-# 4. DIRECTORY AND PERMISSION SETUP
+# 5. DIRECTORY AND PERMISSION SETUP
 RUN mkdir -p /app/data /app/report/data /app/report/images && \
     chmod +x /app/src/run_workflow.sh
 
-# 5. Set the working directory to src so the user can run scripts with a simple relative path
+# 6. Set the working directory to src so the user can run scripts with a simple relative path
 WORKDIR /app/src
